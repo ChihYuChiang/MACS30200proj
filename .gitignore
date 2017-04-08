@@ -96,5 +96,7 @@ reference/
 # from tste package
 bin/tste/
 
-# configs
+# temp files
 .vscode/
+kernel*
+test.py
