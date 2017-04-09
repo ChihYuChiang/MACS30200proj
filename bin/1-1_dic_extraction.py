@@ -20,13 +20,24 @@ results = [re.findall(reg, text, re.DOTALL) for reg in regs]
 words = [(re.findall('\n[^a-z]+\n', s)[-1]).strip() for result in results for s in result]
 len(words)
 
-#%%
-#Remove duplicate
-keywords = pd.Series(words).drop_duplicates()
-len(keywords)
 
 #%%
-#Export
+#--Some cleaning-up
+#Make all lowercases
+words_low = []
+for word in words:
+    if re.search('[^A-Z\-; ]', word) == None and type(word) == str:
+        #Split synonyms
+        for key in re.split('; ',  word):
+            words_low.append(key.lower())
+
+#Remove duplicates
+keywords = pd.Series(words_low).drop_duplicates()
+len(keywords)
+
+
+#%%
+#--Export
 keywords.to_csv(r'..\data\process\keywords.csv', index=False)
 
 
