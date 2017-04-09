@@ -220,12 +220,19 @@ def extract_Polygon(soup, filename):
     
 def extract_GamesRadar(soup, filename):
     #Game title
-    try:
-        gameTitle = filename      
-        gameTitle = re.sub('-', ' ', gameTitle)
-        gameTitle = re.sub(' review', '', gameTitle, flags=re.IGNORECASE)
+    try: gameTitle = soup.select('.review-title-long')[0].get_text()
     except: gameTitle = None
 
+    if gameTitle == None:
+        try: gameTitle = soup.select('.review-title-medium')[0].get_text()
+        except: gameTitle = None
+    
+    if gameTitle == None:
+        try: gameTitle = soup.select('.review-title-standard')[0].get_text()
+        except: gameTitle = None
+    
+    gameTitle = re.sub(' review.*', '', gameTitle, flags=re.IGNORECASE)
+    
     #Review score
     try: ReviewerScore = soup.find(class_ = 'out-of-score-text').p.get_text()
     except: ReviewerScore = None
@@ -239,7 +246,7 @@ def extract_GamesRadar(soup, filename):
         for divs in soup.find_all('div', attrs={"class" : "text-copy bodyCopy auto"}):
             for ptag in divs.find_all('p'):
                 result = ptag.text
-                Review = Review + '' + result
+                Review = Review + ' ' + result
     except: Review = None
 
     #Author
