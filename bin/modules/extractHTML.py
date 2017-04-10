@@ -231,7 +231,8 @@ def extract_GamesRadar(soup, filename):
         try: gameTitle = soup.select('.review-title-standard')[0].get_text()
         except: gameTitle = None
     
-    gameTitle = re.sub(' review.*', '', gameTitle, flags=re.IGNORECASE)
+    try: gameTitle = re.sub(' review.*', '', gameTitle, flags=re.IGNORECASE)
+    except: gameTitle = None
     
     #Review score
     try: ReviewerScore = soup.find(class_ = 'out-of-score-text').p.get_text()
