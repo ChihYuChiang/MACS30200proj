@@ -12,7 +12,7 @@ text = f.read()
 #--Acquire keywords from each search term
 #sens = sensation + sense
 #perce = percept + perceive
-terms = ['feel', 'emotion', 'experience', 'encounter', 'aware', 'mind', 'sens', 'state', 'perce', 'discover', 'view', 'interest', 'physic', 'mental', 'spiritual', 'concern', 'thought', 'concept', 'belie', 'rational', 'social', 'imagin'
+terms = ['feel', 'emotion', 'experience', 'encounter', 'aware', 'mind', 'sens', 'state', 'perce', 'discover', 'view', 'interest', 'physic', 'mental', 'spiritual', 'concern', 'thought', 'concept', 'belie', 'rational', 'social','imagin', 'event'
 ]
 
 regs = ['\n[^a-z]+\n.*?[' + term[0] + '|' + term[0].upper() + ']' + term[1:] for term in terms]
@@ -44,7 +44,7 @@ keywords.to_csv(r'..\data\process\keywords.csv', index=False)
 #%%
 #--Exploration
 #Search specific term
-term = 'cogniti'
+term = 'event'
 
 reg = '\n[^a-z]+\n.*?[' + term[0] + '|' + term[0].upper() + ']' + term[1:]
 results_ex = re.findall(reg, text, re.DOTALL)
