@@ -63,7 +63,7 @@ Qualtrics.SurveyEngine.addOnload(function () {
 				gap = (index + 3) % 5;
 				break;
 		}
-		console.log(array[index] + "," + array[start] + ", " + array[gap]);
+		console.log(array[index] + ", " + array[start] + ", " + array[gap]);
 
 		var kkk = document.getElementsByClassName('ques_choices');
 		kkk[kkk.length - 2].innerHTML = array[start];
@@ -72,5 +72,8 @@ Qualtrics.SurveyEngine.addOnload(function () {
 	console.log("kkk", kkk[kkk.length - 2].innerHTML);
 
 	Qualtrics.SurveyEngine.addEmbeddedData("times", times + 1);
-
+	Qualtrics.SurveyEngine.addEmbeddedData(
+		"triplet" + (times + 1),
+		array[index] + ", " + array[start] + ", " + array[gap]
+	);
 });
