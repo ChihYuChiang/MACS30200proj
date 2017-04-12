@@ -2,29 +2,32 @@
 from bs4 import BeautifulSoup
 import os
 import pandas as pd
-from modules import collectHTML as collect
-from modules import extractHTML as extract
+from data_collection_modules import collectHTML as collect
+from data_collection_modules import extractHTML as extract
 
 
 #--Switches
+#PRODUCE = True to scrape
+#PRODUCE = False to produce df from html
 PRODUCE = False
 EXTRACT = not PRODUCE
 
 # source = 'GameSpot'
 # HTMLfldr = '../data/raw/'
-source = 'GamesRadar'
-HTMLfldr = '../data/raw_gamesradar/'
-# source = 'Polygon'
-# HTMLfldr = '../data/raw_polygon/'
+# source = 'GamesRadar'
+# HTMLfldr = '../data/raw_gamesradar/'
+source = 'Polygon'
+HTMLfldr = '../data/raw_polygon/'
 
 datafldr = '../data/'
 
 
 #--Produce HTML files
 if PRODUCE:
-    #Last time Polygon = 1-7
     #The first Polygon page use ""
-    reviewLinks = collect.getURL(1, source)
+    reviewLinks = collect.getURL(31, source)
+    for reviewLink in reviewLinks: collect.getHTML(reviewLink, source)
+    reviewLinks = collect.getURL(32, source)
     for reviewLink in reviewLinks: collect.getHTML(reviewLink, source)
 
 
@@ -76,6 +79,6 @@ if EXTRACT:
             df_main = extract.extractSoup(soup, filename, source)
             df_cb_main.append(df_main)
 
-        df_cb_main = pd.concat(df_cb_main, ignore_index = True)       
+        df_cb_main = pd.concat(df_cb_main, ignore_index = True)
         #Save data for future analysis
         df_cb_main.to_csv(datafldr + 'df_cb_main_' + source + '.csv')

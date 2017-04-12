@@ -161,6 +161,9 @@ def extract_Polygon(soup, filename):
     try: gameTitle = soup.h1.get_text()
     except: gameTitle = None
 
+    try: gameTitle = re.sub(' review.*', '', gameTitle, flags=re.IGNORECASE)
+    except: gameTitle = None
+
     #Review
     PolyReview = ''
     try:
