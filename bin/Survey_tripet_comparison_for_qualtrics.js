@@ -6,13 +6,13 @@ Qualtrics.SurveyEngine.addOnload(function () {
 	var index;
 	var kk = "${lm://Field/1}";
 	kk = kk.trim();
-	var arr = "${e://Field/xx}";
+	var arr = "${e://Field/playedGames}";
 	console.log("arr", arr);
 	var arr1 = arr.toString();
 	//console.log("arr1",arr1);
 	var kk1 = arr1.split(",");
 	var array = [];
-	var times = "${e://Field/times}"
+	var times = "${e://Field/tripletTimes}"
 	for (var i = 0; i < kk1.length; i++) {
 		if (kk1[i].trim() == kk) {
 			index = i;
@@ -65,15 +65,16 @@ Qualtrics.SurveyEngine.addOnload(function () {
 		}
 		console.log(array[index] + ", " + array[start] + ", " + array[gap]);
 
-		var kkk = document.getElementsByClassName('ques_choices');
-		kkk[kkk.length - 2].innerHTML = array[start];
-		kkk[kkk.length - 1].innerHTML = array[gap];
+		var choices = document.getElementsByClassName('SingleAnswer');
+		choices[choices.length - 2].innerHTML = array[start];
+		choices[choices.length - 1].innerHTML = array[gap];
 	}
-	console.log("kkk", kkk[kkk.length - 2].innerHTML);
-
-	Qualtrics.SurveyEngine.addEmbeddedData("times", times + 1);
+	
 	Qualtrics.SurveyEngine.addEmbeddedData(
-		"triplet" + (times + 1),
-		array[index] + ", " + array[start] + ", " + array[gap]
+		"triplet" + times,
+		this.getQuestionInfo().QuestionID + ", " + array[index] + ", " + array[start] + ", " + array[gap]
 	);
+
+	Qualtrics.SurveyEngine.addEmbeddedData("tripletTimes", times + 1);
+
 });
