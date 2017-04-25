@@ -41,7 +41,17 @@ Qualtrics.SurveyEngine.addOnload(function () {
     Number("${q://QID44/SelectedChoicesRecode}") +
     Number("${q://QID45/SelectedChoicesRecode}") +
     Number("${q://QID46/SelectedChoicesRecode}") +
-    Number("${q://QID47/SelectedChoicesRecode}");
+    Number("${q://QID47/SelectedChoicesRecode}") +
+    Number("${q://QID123/SelectedChoicesRecode}") +
+    Number("${q://QID124/SelectedChoicesRecode}") +
+    Number("${q://QID125/SelectedChoicesRecode}") +
+    Number("${q://QID126/SelectedChoicesRecode}") +
+    Number("${q://QID127/SelectedChoicesRecode}") +
+    Number("${q://QID128/SelectedChoicesRecode}") +
+    Number("${q://QID129/SelectedChoicesRecode}") +
+    Number("${q://QID130/SelectedChoicesRecode}") +
+    Number("${q://QID131/SelectedChoicesRecode}") +
+    Number("${q://QID132/SelectedChoicesRecode}");
 
     Qualtrics.SurveyEngine.addEmbeddedData(
     "filterScore",

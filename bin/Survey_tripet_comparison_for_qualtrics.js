@@ -1,5 +1,16 @@
 Qualtrics.SurveyEngine.addOnload(function () {
 	/*Place Your JavaScript Here*/
+	
+	//Onclick answer
+	this.hideNextButton();
+	this.questionclick = function(event, element){
+        //for a single answer multiple choice question, the element type will be radio
+        if (element.type == 'radio')
+        {	
+			var that = this;
+			(function(){that.clickNextButton();}).delay(0.1);
+        }
+    }
 
 	var start;
 	var gap;
@@ -48,19 +59,19 @@ Qualtrics.SurveyEngine.addOnload(function () {
 				break;
 			case 3:
 				start = (index + 1) % 5;
-				gap = (index + 4) % 5;
-				break;
-			case 4:
-				start = (index + 2) % 5;
 				gap = (index + 3) % 5;
 				break;
-			case 5:
+			case 4:
 				start = (index + 1) % 5;
 				gap = (index + 2) % 5;
 				break;
+			case 5:
+				start = (index + 2) % 5;
+				gap = (index + 3) % 5;
+				break;
 			case 6:
 				start = (index + 1) % 5;
-				gap = (index + 3) % 5;
+				gap = (index + 4) % 5;
 				break;
 		}
 		console.log(array[index] + ", " + array[start] + ", " + array[gap]);
