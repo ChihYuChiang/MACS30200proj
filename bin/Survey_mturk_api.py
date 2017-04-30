@@ -1,19 +1,31 @@
 import time
-import boto3
+import boto3 #AWS mturk API access
 
-count = 0
+mturk = boto3.client('mturk')
 
-def executeSomething():
-    #code here
-    print('you are beautiful')
-    time.sleep(2)
+
+#--Configure
+totalCount = 9 #45, +2
+batch = 2
+gap = 3 * 60 * 60 #hours
+
+
+#--Define function for recursion
+count = totalCount
+def callAPI():
     global count
+
+    response = mturk.create_hit_with_hit_type(
+        HITTypeId='3MHB1T0JXN7YQQHPEMXFW8J0CHKJS7',
+        MaxAssignments=5,
+        LifetimeInSeconds=gap,
+        UniqueRequestToken='t' + str(count),
+        HITLayoutId='3QB0JFJO76IFNHYHGO9RY6P9J9DWAR'
+    )
+    print(response)
+
     count += 1
+    time.sleep(gap)
 
-while count <= 3:
-    executeSomething()
-
-# mturk = boto3.client('mturk')
-
-# response = mturk.get_account_balance()
-# print(response)
+while count < totalCount + batch:
+    callAPI()
