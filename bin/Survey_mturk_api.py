@@ -1,3 +1,4 @@
+#--Setting up
 import time
 import boto3 #AWS mturk API access
 
@@ -5,9 +6,9 @@ mturk = boto3.client('mturk')
 
 
 #--Configure
-totalCount = 9 #45, +2
-batch = 2
-gap = 3 * 60 * 60 #hours
+totalCount = 16 #Total HITs completed (for request token)
+batch = 3 #Number of HITs to be automated in a batch
+gap = 3 * 60 * 60 #Gap hours between each HIT
 
 
 #--Define function for recursion
@@ -19,7 +20,7 @@ def callAPI():
         HITTypeId='3MHB1T0JXN7YQQHPEMXFW8J0CHKJS7',
         MaxAssignments=5,
         LifetimeInSeconds=gap,
-        UniqueRequestToken='t' + str(count),
+        UniqueRequestToken='t' + str(count), #For identifying request error and duplication
         HITLayoutId='3QB0JFJO76IFNHYHGO9RY6P9J9DWAR'
     )
     print(response)
@@ -27,5 +28,7 @@ def callAPI():
     count += 1
     time.sleep(gap)
 
+
+#--Recur the batch number of times
 while count < totalCount + batch:
     callAPI()
