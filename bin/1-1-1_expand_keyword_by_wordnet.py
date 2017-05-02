@@ -35,7 +35,7 @@ wordLists = map(getRelevantWords, keywords)
 #Flatten list of lists
 keywords_expand = [word for wordList in wordLists for word in wordList]
 
-#Remove multigrams (linked with _)
+#Remove n-grams (linked with _)
 temp = keywords_expand
 keywords_expand = []
 for word in temp:
