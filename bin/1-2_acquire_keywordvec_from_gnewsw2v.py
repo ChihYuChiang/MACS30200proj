@@ -14,7 +14,7 @@ model = gensim.models.Word2Vec.load_word2vec_format(r'..\reference\GoogleNews\Go
 #%%
 #--Keywords
 #Keywords pool
-keyWords_raw = pd.read_csv(r'..\data\process\keywords.csv', encoding='utf-8', header=None)[0].tolist()
+keyWords_raw = pd.read_csv(r'..\data\process\keywords_expand.csv', encoding='utf-8', header=None)[0].tolist()
 
 #Make lower-case
 keyWords_raw = [word.lower() for word in keyWords_raw]

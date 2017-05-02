@@ -44,8 +44,8 @@ plt.close()
 #%%
 #--K-mean flat clustering
 #Setting up
-numClusters = 9
-randomState = 88
+numClusters = 10
+randomState = 2017
 km = sklearn.cluster.KMeans(n_clusters=numClusters, init='random', random_state=randomState) #The result is changed according to the initial
 
 #K-mean scores
