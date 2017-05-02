@@ -1,5 +1,6 @@
 #%%
 import pandas as pd
+import re
 from nltk.corpus import wordnet as wn
 
 #Keywords identified by dictionary inversed look-up
@@ -34,6 +35,12 @@ wordLists = map(getRelevantWords, keywords)
 #Flatten list of lists
 keywords_expand = [word for wordList in wordLists for word in wordList]
 
+#Remove multigrams (linked with _)
+temp = keywords_expand
+keywords_expand = []
+for word in temp:
+    if not re.search('_', word): keywords_expand.append(word)
+
 #Include original keywords and drop duplicates
 keywords_expand = pd.Series(keywords_expand + keywords).drop_duplicates()
 
@@ -42,3 +49,4 @@ keywords_expand = pd.Series(keywords_expand + keywords).drop_duplicates()
 #--Examine and save
 print(len(keywords_expand))
 keywords_expand.to_csv(r'..\data\process\keywords_expand.csv', index=False)
+
