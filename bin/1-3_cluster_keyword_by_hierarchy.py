@@ -25,6 +25,7 @@ distMatrix = spsd.squareform(spsd.pdist(keyWordSubMatrix, metric='cosine'))
 #--Ward clustering
 #Return is in a special form, refer to scipy ilinkage matrix
 linkageMatrix = scluster.hierarchy.ward(distMatrix)
+pickle.dump(linkageMatrix, open(r'..\data\process\wardLinkageMatrix.p', 'wb'))
 
 
 #%%
@@ -44,7 +45,7 @@ plt.close()
 #%%
 #--Designate the number of clusters
 #This gives us an array giving each element of linkageMatrix's cluster
-numClusters = 9
+numClusters = 10
 hierarchicalClusters = scluster.hierarchy.fcluster(linkageMatrix, numClusters, 'maxclust')
 df_cluster = pd.DataFrame({
     'cluster': hierarchicalClusters,
