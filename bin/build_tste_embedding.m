@@ -1,6 +1,6 @@
 %--Setting up
 %Get the functions to use
-addpath('tste/');
+addpath('bin/tste/');
 
 %Disable the pause after each loop
 pause('off');
@@ -25,7 +25,7 @@ M = csvread('../data/triplets_survey.csv');
 % probabilities is maximized (default = true).
 %
 % Note: This function directly learns the embedding X.
-embedding = tste(M, 25, 0, 2665);
+embedding = tste(M, 50, 0, 1224);
 
 
 %--Save result in csv
