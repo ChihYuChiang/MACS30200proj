@@ -1,6 +1,6 @@
 %--Setting up
 %Get the functions to use
-addpath('bin/tste/');
+addpath(genpath('tste/'));
 
 %Disable the pause after each loop
 pause('off');
@@ -25,11 +25,12 @@ M = csvread('../data/triplets_survey.csv');
 % probabilities is maximized (default = true).
 %
 % Note: This function directly learns the embedding X.
-embedding = tste(M, 50, 0, 1224);
-
-
-%--Save result in csv
-csvwrite('../data/process/tste.csv', embedding);
+for i = 6:20
+    embedding = tste(M, i, 0, 1224);
+    
+    %--Save result in csv
+    csvwrite(strcat('../data/process/tste/tste_embedding_', num2str(i), '.csv'), embedding);
+end
 
 
 %--Keyboard shortcut used in MATLAB

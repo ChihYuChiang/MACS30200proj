@@ -1,0 +1,16 @@
+---
+title: "Untitled"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(modelr)
+
+review <- read_csv("../data/df_cb_main.csv")
+```
+
+```{r}
+review
+```
+
