@@ -36,7 +36,7 @@ if EXTRACT:
     soupCauldron = []
     def makeSoups(fldr):
         for filename in os.listdir(fldr):
-            content = open(fldr + filename, 'r', encoding='utf-8', errors='replace') #encoding='utf-8'
+            content = open(fldr + filename, 'r', errors='replace', encoding='utf-8')
             soup = BeautifulSoup(content.read(), 'html5lib')
             yield (soup, filename)
 
@@ -58,10 +58,10 @@ if EXTRACT:
 
         for content in getContent():
             df_cb_main      = pd.concat([content[0], df_cb_main], ignore_index = True)
-            df_cb_platform  = pd.concat([content[0], df_cb_platform], ignore_index = True)
-            df_cb_developer = pd.concat([content[0], df_cb_developer], ignore_index = True)
-            df_cb_publisher = pd.concat([content[0], df_cb_publisher], ignore_index = True)
-            df_cb_genre     = pd.concat([content[0], df_cb_genre], ignore_index = True)
+            df_cb_platform  = pd.concat([content[1], df_cb_platform], ignore_index = True)
+            df_cb_developer = pd.concat([content[2], df_cb_developer], ignore_index = True)
+            df_cb_publisher = pd.concat([content[3], df_cb_publisher], ignore_index = True)
+            df_cb_genre     = pd.concat([content[4], df_cb_genre], ignore_index = True)
 
         # Save data for future analysis
         df_cb_main.to_csv(datafldr + 'df_cb_main.csv')
