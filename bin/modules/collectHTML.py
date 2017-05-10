@@ -40,7 +40,11 @@ def getURL_GameSpot(page):
 
 def getURL_Polygon(page):
     reviewLinks = []
-    response = request.urlopen('http://www.polygon.com/games/reviewed/' + str(page))
+    if page == 1:
+        url = 'http://www.polygon.com/games/reviewed/'
+    else :
+        url = 'http://www.polygon.com/games/reviewed/' + str(page)
+    response = request.urlopen(url)
     html = response.read().decode('utf-8')
     html = BeautifulSoup(html, 'html5lib')
 
@@ -53,7 +57,11 @@ def getURL_Polygon(page):
 
 def getURL_GamesRadar(page):
     reviewLinks = []
-    response = request.urlopen('http://www.gamesradar.com/all-platforms/reviews/page/' + str(page)+'/')
+    if page == 1:
+        url = 'http://www.gamesradar.com/all-platforms/reviews'
+    else :
+        url = 'http://www.gamesradar.com/all-platforms/reviews/page/' + str(page) +'/'
+    response = request.urlopen(url)
     html = response.read().decode('utf-8')
     html = BeautifulSoup(html, 'html.parser')
 
