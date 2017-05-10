@@ -100,3 +100,5 @@ bin/tste/
 .vscode/
 kernel*
 test.py
+.Rproj.user
+*.Rproj
