@@ -7,7 +7,7 @@ pause('off');
 
 
 %--Read in survey result
-M = csvread('../data/triplets_survey.csv');
+M = csvread('../data/raw_survey/triplets_survey.csv');
 % M = [1,2,3; 1,2,4; 2,1,3; 4,2,3];
 
 
@@ -25,7 +25,7 @@ M = csvread('../data/triplets_survey.csv');
 % probabilities is maximized (default = true).
 %
 % Note: This function directly learns the embedding X.
-for i = 6:20
+for i = 25:5:45
     embedding = tste(M, i, 0, 1224);
     
     %--Save result in csv
