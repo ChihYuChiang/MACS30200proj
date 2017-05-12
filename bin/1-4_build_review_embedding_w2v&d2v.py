@@ -49,7 +49,7 @@ if D2V:
     #--Tag docs by game title
     taggedDocs = []
     for index, row in df.iterrows():
-        taggedDocs.append(gensim.models.doc2vec.LabeledSentence(words=row['Review_normalized_arti_WOstop'], tags=[row['Game Title'], 'id_' + str(row['Id'])]))
+        taggedDocs.append(gensim.models.doc2vec.LabeledSentence(words=row['Review_normalized_arti_WOstop'], tags=[row['Game'], 'id_' + str(index)]))
     df['TaggedReview'] = taggedDocs
 
 

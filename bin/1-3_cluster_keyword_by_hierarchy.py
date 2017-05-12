@@ -13,9 +13,9 @@ import sklearn.manifold
 #%%
 #--Read in data
 keyWords, keyWordSubMatrix = pickle.load(open(r'..\data\process\keywordVecs.p', 'rb'))
-
-
 keyWordSubMatrix
+
+
 #%%
 #--Compute cosine distance matrix
 distMatrix = spsd.squareform(spsd.pdist(keyWordSubMatrix, metric='cosine'))
@@ -44,8 +44,11 @@ plt.close()
 
 #%%
 #--Designate the number of clusters
+#Read in pretrained linkage matrix (if any)
+linkageMatrix = pickle.load(open(r'..\data\process\wardLinkageMatrix.p', 'rb'))
+
 #This gives us an array giving each element of linkageMatrix's cluster
-numClusters = 10
+numClusters = 10000
 hierarchicalClusters = scluster.hierarchy.fcluster(linkageMatrix, numClusters, 'maxclust')
 df_cluster = pd.DataFrame({
     'cluster': hierarchicalClusters,
@@ -53,7 +56,7 @@ df_cluster = pd.DataFrame({
 })
 
 #Save for later use
-df_cluster.to_csv(r'..\data\output\keywordGroup_hierarchy.csv', index=False)
+df_cluster.to_csv(r'..\data\output\keywordGroup_hierarchy_' + str(numClusters) + '.csv', index=False)
 
 #Observe
 print("Titles per cluster:")

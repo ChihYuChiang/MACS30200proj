@@ -8,8 +8,8 @@ import gensim
 
 #%%
 #--Read in data
-df = pd.read_csv(r'..\data\df_cb_main_expand25.csv', encoding='utf-8', error_bad_lines=False).dropna(subset=['Review']).drop_duplicates(['Author Name', 'Game Title'])
-print(len(df.query('Core > 0')))
+df = pd.read_csv(r'..\data\df_cb_main_combined.csv', index_col=0, encoding='utf-8', error_bad_lines=False).dropna(subset=['Review']).drop_duplicates(['Author', 'Game'])
+print(len(df.query('CoreID > 0')))
 
 
 #%%
