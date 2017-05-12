@@ -27,4 +27,4 @@ review_combined$CoreID[is.na(review_combined$CoreID)] <- 0
 
 
 #--Save
-write.csv(review_combined, file="../data/df_cb_main_combined.csv")
+write.csv(review_combined, file="../data/df_cb_main_combined.csv", fileEncoding="UTF-8")
