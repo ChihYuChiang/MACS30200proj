@@ -17,10 +17,10 @@ import sklearn.cluster
 
 #%%
 #--Read in data
-df_scores = pd.read_csv(r'..\data\process\tste.csv', encoding='utf-8', header=None)
+df_scores = pd.read_csv(r'..\data\process\tste\tste_embedding_25.csv', encoding='utf-8', header=None)
 
-CORE_GAMES = pd.read_csv(r'..\data\core_games.csv', encoding='utf-8', header=None)[0].tolist()
-CORE_ID = pd.read_csv(r'..\data\core_games.csv', encoding='utf-8', header=None)[1].tolist()
+CORE_GAMES = pd.read_csv(r'..\data\raw_coregame\core_games.csv', encoding='utf-8', header=None)[0].tolist()
+CORE_ID = pd.read_csv(r'..\data\raw_coregame\core_games.csv', encoding='utf-8', header=None)[1].tolist()
 
 
 #%%
@@ -34,10 +34,29 @@ ax = fig.add_subplot(111)
 ax.set_frame_on(False)
 plt.scatter(tsneGames[:, 0], tsneGames[:, 1], alpha=1) #Making the points invisible
 for i, word in enumerate(CORE_GAMES):
-    ax.annotate(word, (tsneGames[:, 0][i],tsneGames[:, 1][i]))
+    ax.annotate(word, (tsneGames[:, 0][i], tsneGames[:, 1][i]))
 plt.xticks(())
 plt.yticks(())
 plt.savefig(r'..\img\2-1_tsne')
+plt.show()
+plt.close()
+
+
+#%%
+#--Use the 2 dimension reduction instead
+tsteGames = pd.read_csv(r'..\data\process\tste\tste_embedding_2.csv', names=['x', 'y'], encoding='utf-8', header=None)
+
+#%%
+#Plot
+fig = plt.figure(figsize = (15, 10))
+ax = fig.add_subplot(111)
+ax.set_frame_on(False)
+plt.scatter(tsteGames.x, tsteGames.y, alpha=1) #Making the points invisible
+for i, word in enumerate(CORE_GAMES):
+    ax.annotate(word, (tsteGames.x[i],tsteGames.y[i]))
+plt.xticks(())
+plt.yticks(())
+plt.savefig(r'..\img\2-1_tste2')
 plt.show()
 plt.close()
 
@@ -117,8 +136,8 @@ for i, word in enumerate(CORE_GAMES):
 plt.xticks(())
 plt.yticks(())
 plt.title('Predicted Clusters\n k = {}'.format(numClusters))
-plt.savefig(r'..\img\2-1_k-mean_PCA_' + str(numClusters))
-plt.show()
+# plt.savefig(r'..\img\2-1_k-mean_PCA_' + str(numClusters))
+# plt.show()
 
 #--Color map for predicted labels (tsne)
 colors_p = [colordict[l] for l in km.labels_]
@@ -131,13 +150,27 @@ for i, word in enumerate(CORE_GAMES):
 plt.xticks(())
 plt.yticks(())
 plt.title('Predicted Clusters\n k = {}'.format(numClusters))
-plt.savefig(r'..\img\2-1_k-mean_tsne_' + str(numClusters))
+# plt.savefig(r'..\img\2-1_k-mean_tsne_' + str(numClusters))
+# plt.show()
+
+#--Color map for predicted labels (tste)
+colors_p = [colordict[l] for l in km.labels_]
+fig = plt.figure(figsize = (10,6))
+ax = fig.add_subplot(111)
+ax.set_frame_on(False)
+plt.scatter(tsteGames.x, tsteGames.y, color = colors_p, alpha = 0.5)
+for i, word in enumerate(CORE_GAMES):
+    ax.annotate(word, (tsteGames.x[i],tsteGames.y[i]))
+plt.xticks(())
+plt.yticks(())
+plt.title('Predicted Clusters\n k = {}'.format(numClusters))
+plt.savefig(r'..\img\2-1_k-mean_tste2_' + str(numClusters))
 plt.show()
 
 
 #%%
 #--Selecting cluster number by silhouette method
-range_n_clusters = np.arange(2,21)
+range_n_clusters = np.arange(2,11)
 X = df_scores
 for n_clusters in range_n_clusters:
     # Create a subplot with 1 row and 2 columns
