@@ -12,6 +12,7 @@ from sklearn.metrics import confusion_matrix, accuracy_score, precision_score, r
 from sklearn.tree import DecisionTreeRegressor, DecisionTreeClassifier
 from sklearn.ensemble import BaggingClassifier, RandomForestRegressor
 from sklearn.naive_bayes import MultinomialNB
+from sklearn.model_selection import KFold
 
 
 #%%
@@ -26,46 +27,30 @@ df = pickle.load(open(r'..\data\process\score_new_doc2vec.p', 'rb')) #df with di
 idTags = []
 groups = []
 for index, row in df.iterrows():
-    if row['Core'] > 0:
-        idTag = 'id_' + str(row['Id'])
-        group = (df_core[df_core['core_id'] == row['Core']])['group_label'].values[0]
+    if row['CoreID'] > 0:
+        idTag = 'id_' + str(index)
+        group = (df_core[df_core['core_id'] == row['CoreID']])['group_label'].values[0]
+        vec = D2V_WOstop.docvecs[idTag]
 
         idTags.append(idTag)
         groups.append(group)
 
-coreVecs = df.query('Core > 0').filter(regex=('^group\d+$'))
+coreVecs = df.query('CoreID > 0').filter(regex=('^group\d+$'))
 
 
 #%%
-#--Dimension reduction for visualization by PCA
-pcaDocs = sklearn.decomposition.PCA(n_components = 2).fit(coreVecs)
-reducedPCA = pcaDocs.transform(coreVecs)
-print(reducedPCA.shape)
-
-
-#%%
-#--Organize into a df except vecs
+#--Organize into a df
 df_core_expand = pd.DataFrame({
     'idTag': idTags,
     'group': groups,
-    'pca1': reducedPCA[:, 0],
-    'pca2': reducedPCA[:, 1]
 })
+df_core_expand = pd.merge(df_core_expand, coreVecs, left_index=True, right_index=True)
 numOfCluster = len(df_core_expand.group.unique())
-
-#Randomize for testing
-df_core_expand = df_core_expand.sample(frac=1, random_state=207)
 
 
 #%%
-#--Split data (70% training, 30% testing)
-cut_point   = round(0.7 * len(df_core_expand))
-
-df_train = df_core_expand[ :cut_point]
-df_test  = df_core_expand[cut_point: ]
-
-vect_train  = coreVecs[ :cut_point]
-vect_test   = coreVecs[cut_point: ]
+#--K fold setting up
+kf = KFold(n_splits=10)
 
 
 
@@ -76,16 +61,46 @@ SVM
 ------------------------------------------------------------
 '''
 #%%
-#--Initialize and train the model
-clf = sklearn.svm.SVC(kernel='linear', probability=False)
-clf.fit(vect_train, df_train['group'])
-labels = clf.predict(vect_test)
+#--Setting up
+#Data splitting and provide empty bottles
+dfs = kf.split(df_core_expand)
+precisions = []
+recalls    = []
+f1s        = []
+labels_real = np.empty(shape=(0,0))
+labels_predicted = np.empty(shape=(0,0))
+
+
+#--Train all models
+for train, test in dfs:
+    df_train = df_core_expand.loc[train]
+    df_test = df_core_expand.loc[test]
+
+    #Initialize and train the model
+    clf = sklearn.svm.SVC(kernel='linear', probability=False)
+    clf.fit(df_train.filter(regex='[0-9]+', axis=1), df_train['group'])
+    labels = clf.predict(df_test.filter(regex='[0-9]+', axis=1))
+
+    #Evaluation
+    precisions.append(sklearn.metrics.precision_score(df_test['group'], labels, average = 'weighted'))
+    recalls.append(sklearn.metrics.recall_score(df_test['group'], labels, average = 'weighted'))
+    f1s.append(sklearn.metrics.f1_score(df_test['group'], labels, average = 'weighted'))
+
+    #Record true and predicted labels
+    labels_real = np.append(labels_real, np.array(df_test['group']))
+    labels_predicted = np.append(labels_predicted, labels)
 
 
 #%%
-#--Evaluation
+#--Evaluate all models
+#Indicators
+print('precision: ' + str(np.mean(precisions)))
+print('recall: ' + str(np.mean(recalls)))
+print('f1 measure: ' + str(np.mean(f1s)))
+
+#%%
 #Confusion matrix
-mat = confusion_matrix(df_test['group'], labels)
+mat = confusion_matrix(labels_real, labels_predicted)
 seaborn.heatmap(mat.T, square=True, annot=True, fmt='d', cbar=False,
                 xticklabels=np.arange(1, numOfCluster + 1),
                 yticklabels=np.arange(1, numOfCluster + 1))
@@ -96,10 +111,6 @@ plt.savefig(r'..\img\2-2-1_confusion_SVM_' + str(numOfCluster))
 plt.show()
 plt.close()
 
-print(sklearn.metrics.precision_score(df_test['group'], labels, average = 'weighted')) #precision
-print(sklearn.metrics.recall_score(df_test['group'], labels, average = 'weighted')) #recall
-print(sklearn.metrics.f1_score(df_test['group'], labels, average = 'weighted')) #F-1 measure
-
 
 
 
@@ -109,16 +120,46 @@ Neural Nets (Multi-layer Perceptron (MLP))
 ------------------------------------------------------------
 '''
 #%%
-#--Initialize and train the model
-clf = MLPClassifier()
-clf.fit(vect_train, df_train['group'])
-labels = clf.predict(vect_test)
+#--Setting up
+#Data splitting and provide empty bottles
+dfs = kf.split(df_core_expand)
+precisions = []
+recalls    = []
+f1s        = []
+labels_real = np.empty(shape=(0,0))
+labels_predicted = np.empty(shape=(0,0))
+
+
+#--Train all models
+for train, test in dfs:
+    df_train = df_core_expand.loc[train]
+    df_test = df_core_expand.loc[test]
+
+    #Initialize and train the model
+    clf = MLPClassifier()
+    clf.fit(df_train.filter(regex='[0-9]+', axis=1), df_train['group'])
+    labels = clf.predict(df_test.filter(regex='[0-9]+', axis=1))
+
+    #Evaluation
+    precisions.append(sklearn.metrics.precision_score(df_test['group'], labels, average = 'weighted'))
+    recalls.append(sklearn.metrics.recall_score(df_test['group'], labels, average = 'weighted'))
+    f1s.append(sklearn.metrics.f1_score(df_test['group'], labels, average = 'weighted'))
+
+    #Record true and predicted labels
+    labels_real = np.append(labels_real, np.array(df_test['group']))
+    labels_predicted = np.append(labels_predicted, labels)
 
 
 #%%
-#--Evaluation
+#--Evaluate all models
+#Indicators
+print('precision: ' + str(np.mean(precisions)))
+print('recall: ' + str(np.mean(recalls)))
+print('f1 measure: ' + str(np.mean(f1s)))
+
+#%%
 #Confusion matrix
-mat = confusion_matrix(df_test['group'], labels)
+mat = confusion_matrix(labels_real, labels_predicted)
 seaborn.heatmap(mat.T, square=True, annot=True, fmt='d', cbar=False,
                 xticklabels=np.arange(1, numOfCluster + 1),
                 yticklabels=np.arange(1, numOfCluster + 1))
@@ -128,10 +169,6 @@ plt.ylabel('predicted label')
 plt.savefig(r'..\img\2-2-1_confusion_NN_' + str(numOfCluster))
 plt.show()
 plt.close()
-
-print(sklearn.metrics.precision_score(df_test['group'], labels, average = 'weighted')) #precision
-print(sklearn.metrics.recall_score(df_test['group'], labels, average = 'weighted')) #recall
-print(sklearn.metrics.f1_score(df_test['group'], labels, average = 'weighted')) #F-1 measure
 
 
 
@@ -143,23 +180,50 @@ Random forest (Apply bagging to improve decision trees)
 '''
 #%%
 #--Setting up
-#Create an instance of our decision tree classifier.
-tree = DecisionTreeClassifier(max_depth=10)
+#Data splitting and provide empty bottles
+dfs = kf.split(df_core_expand)
+precisions = []
+recalls    = []
+f1s        = []
+labels_real = np.empty(shape=(0,0))
+labels_predicted = np.empty(shape=(0,0))
 
-#Each tree uses up to 80% of the data
-bag = BaggingClassifier(tree, n_estimators=100, max_samples=0.8, random_state=1)
+
+#--Train all models
+for train, test in dfs:
+    df_train = df_core_expand.loc[train]
+    df_test = df_core_expand.loc[test]
+
+    #Create an instance of our decision tree classifier.
+    tree = DecisionTreeClassifier(max_depth=10)
+
+    #Each tree uses up to 80% of the data
+    clf = BaggingClassifier(tree, n_estimators=100, max_samples=0.8, random_state=1)
+
+    #Fit the bagged classifier and visualize
+    clf.fit(df_train.filter(regex='[0-9]+', axis=1), df_train['group'])
+    labels = clf.predict(df_test.filter(regex='[0-9]+', axis=1))
+
+    #Evaluation
+    precisions.append(sklearn.metrics.precision_score(df_test['group'], labels, average = 'weighted'))
+    recalls.append(sklearn.metrics.recall_score(df_test['group'], labels, average = 'weighted'))
+    f1s.append(sklearn.metrics.f1_score(df_test['group'], labels, average = 'weighted'))
+
+    #Record true and predicted labels
+    labels_real = np.append(labels_real, np.array(df_test['group']))
+    labels_predicted = np.append(labels_predicted, labels)
 
 
 #%%
-#--Fit the bagged classifier and visualize
-bag.fit(vect_train, df_train['group'])
-labels = bag.predict(vect_test)
-
+#--Evaluate all models
+#Indicators
+print('precision: ' + str(np.mean(precisions)))
+print('recall: ' + str(np.mean(recalls)))
+print('f1 measure: ' + str(np.mean(f1s)))
 
 #%%
-#--Evaluation
 #Confusion matrix
-mat = confusion_matrix(df_test['group'], labels)
+mat = confusion_matrix(labels_real, labels_predicted)
 seaborn.heatmap(mat.T, square=True, annot=True, fmt='d', cbar=False,
                 xticklabels=np.arange(1, numOfCluster + 1),
                 yticklabels=np.arange(1, numOfCluster + 1))
@@ -170,10 +234,6 @@ plt.savefig(r'..\img\2-2-1_confusion_RF_' + str(numOfCluster))
 plt.show()
 plt.close()
 
-print(sklearn.metrics.precision_score(df_test['group'], labels, average = 'weighted')) #precision
-print(sklearn.metrics.recall_score(df_test['group'], labels, average = 'weighted')) #recall
-print(sklearn.metrics.f1_score(df_test['group'], labels, average = 'weighted')) #F-1 measure
-
 
 
 
@@ -183,14 +243,47 @@ Naive Bayes (multinomial)
 ------------------------------------------------------------
 '''
 #%%
-model = MultinomialNB()
-model.fit((vect_train - np.min(vect_train)), df_train['group'])
-labels = model.predict((vect_test - np.min(vect_train)))
+#--Setting up
+#Data splitting and provide empty bottles
+dfs = kf.split(df_core_expand)
+precisions = []
+recalls    = []
+f1s        = []
+labels_real = np.empty(shape=(0,0))
+labels_predicted = np.empty(shape=(0,0))
+
 
 #%%
-#--Evaluation
+#--Train all models
+for train, test in dfs:
+    df_train = df_core_expand.loc[train]
+    df_test = df_core_expand.loc[test]
+
+    #Initialize and train the model
+    clf = MultinomialNB()
+    clf.fit(df_train.filter(regex='[0-9]+', axis=1) - np.min(df_train.filter(regex='[0-9]+', axis=1)), df_train['group'])
+    labels = clf.predict(df_test.filter(regex='[0-9]+', axis=1))
+
+    #Evaluation
+    precisions.append(sklearn.metrics.precision_score(df_test['group'], labels, average = 'weighted'))
+    recalls.append(sklearn.metrics.recall_score(df_test['group'], labels, average = 'weighted'))
+    f1s.append(sklearn.metrics.f1_score(df_test['group'], labels, average = 'weighted'))
+
+    #Record true and predicted labels
+    labels_real = np.append(labels_real, np.array(df_test['group']))
+    labels_predicted = np.append(labels_predicted, labels)
+
+
+#%%
+#--Evaluate all models
+#Indicators
+print('precision: ' + str(np.mean(precisions)))
+print('recall: ' + str(np.mean(recalls)))
+print('f1 measure: ' + str(np.mean(f1s)))
+
+#%%
 #Confusion matrix
-mat = confusion_matrix(df_test['group'], labels)
+mat = confusion_matrix(labels_real, labels_predicted)
 seaborn.heatmap(mat.T, square=True, annot=True, fmt='d', cbar=False,
                 xticklabels=np.arange(1, numOfCluster + 1),
                 yticklabels=np.arange(1, numOfCluster + 1))
@@ -200,7 +293,3 @@ plt.ylabel('predicted label')
 plt.savefig(r'..\img\2-2-1_confusion_NB_' + str(numOfCluster))
 plt.show()
 plt.close()
-
-print(sklearn.metrics.precision_score(df_test['group'], labels, average = 'weighted')) #precision
-print(sklearn.metrics.recall_score(df_test['group'], labels, average = 'weighted')) #recall
-print(sklearn.metrics.f1_score(df_test['group'], labels, average = 'weighted')) #F-1 measure
