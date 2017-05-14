@@ -18,8 +18,9 @@ from sklearn.model_selection import KFold
 #%%
 #--Read in data
 #Remember to expand the review
+keyGNum = 1000
 df_core = pickle.load(open(r'..\data\process\core_cluster.p', 'rb'))
-df = pickle.load(open(r'..\data\process\score_new_doc2vec.p', 'rb')) #df with distances from the last step
+df = pickle.load(open(r'..\data\process\score_' + str(keyGNum) + '_doc2vec.p', 'rb')) #df with distances from the last step
 
 
 #%%
@@ -30,7 +31,6 @@ for index, row in df.iterrows():
     if row['CoreID'] > 0:
         idTag = 'id_' + str(index)
         group = (df_core[df_core['core_id'] == row['CoreID']])['group_label'].values[0]
-        vec = D2V_WOstop.docvecs[idTag]
 
         idTags.append(idTag)
         groups.append(group)
@@ -40,17 +40,19 @@ coreVecs = df.query('CoreID > 0').filter(regex=('^group\d+$'))
 
 #%%
 #--Organize into a df
+#The first "group" is coregame cluster tag; "groupn" is the distance between each doc and keyword group centroid
 df_core_expand = pd.DataFrame({
     'idTag': idTags,
     'group': groups,
 })
-df_core_expand = pd.merge(df_core_expand, coreVecs, left_index=True, right_index=True)
+
+df_core_expand = pd.merge(df_core_expand.reset_index(drop=True), coreVecs.reset_index(drop=True), left_index=True, right_index=True)
 numOfCluster = len(df_core_expand.group.unique())
 
 
 #%%
 #--K fold setting up
-kf = KFold(n_splits=10)
+kf = KFold(n_splits=len(df_core_expand), shuffle=False, random_state=2017)
 
 
 
@@ -78,7 +80,7 @@ for train, test in dfs:
 
     #Initialize and train the model
     clf = sklearn.svm.SVC(kernel='linear', probability=False)
-    clf.fit(df_train.filter(regex='[0-9]+', axis=1), df_train['group'])
+    clf.fit(df_train.filter(regex='group[0-9]+', axis=1), df_train['group'])
     labels = clf.predict(df_test.filter(regex='[0-9]+', axis=1))
 
     #Evaluation
@@ -107,7 +109,7 @@ seaborn.heatmap(mat.T, square=True, annot=True, fmt='d', cbar=False,
 plt.title('Confusion Matrix - SVM')
 plt.xlabel('true label')
 plt.ylabel('predicted label')
-plt.savefig(r'..\img\2-2-1_confusion_SVM_' + str(numOfCluster))
+plt.savefig(r'..\img\2-2-1_confusion_SVM_' + str(numOfCluster) + '_k' + str(keyGNum))
 plt.show()
 plt.close()
 
@@ -166,7 +168,7 @@ seaborn.heatmap(mat.T, square=True, annot=True, fmt='d', cbar=False,
 plt.title('Confusion Matrix - Neural Nets (MLP)')
 plt.xlabel('true label')
 plt.ylabel('predicted label')
-plt.savefig(r'..\img\2-2-1_confusion_NN_' + str(numOfCluster))
+plt.savefig(r'..\img\2-2-1_confusion_NN_' + str(numOfCluster) + '_k' + str(keyGNum))
 plt.show()
 plt.close()
 
@@ -230,7 +232,7 @@ seaborn.heatmap(mat.T, square=True, annot=True, fmt='d', cbar=False,
 plt.title('Confusion Matrix - Random Forest')
 plt.xlabel('true label')
 plt.ylabel('predicted label')
-plt.savefig(r'..\img\2-2-1_confusion_RF_' + str(numOfCluster))
+plt.savefig(r'..\img\2-2-1_confusion_RF_' + str(numOfCluster) + '_k' + str(keyGNum))
 plt.show()
 plt.close()
 
@@ -290,6 +292,6 @@ seaborn.heatmap(mat.T, square=True, annot=True, fmt='d', cbar=False,
 plt.title('Confusion Matrix - Multinomial Naive Bayes')
 plt.xlabel('true label')
 plt.ylabel('predicted label')
-plt.savefig(r'..\img\2-2-1_confusion_NB_' + str(numOfCluster))
+plt.savefig(r'..\img\2-2-1_confusion_NB_' + str(numOfCluster) + '_k' + str(keyGNum))
 plt.show()
 plt.close()

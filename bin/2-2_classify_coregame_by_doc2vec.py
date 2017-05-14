@@ -49,10 +49,13 @@ df_core_expand = pd.DataFrame({
 df_core_expand = pd.merge(df_core_expand, coreVecs, left_index=True, right_index=True)
 numOfCluster = len(df_core_expand.group.unique())
 
+#How many review in each cluster
+df_core_expand.groupby(['group']).count()
+
 
 #%%
 #--K fold setting up
-kf = KFold(n_splits=10)
+kf = KFold(n_splits=len(df_core_expand), shuffle=False, random_state=2017)
 
 
 

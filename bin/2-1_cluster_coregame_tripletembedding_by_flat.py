@@ -29,16 +29,17 @@ tsneGames = sklearn.manifold.TSNE(n_components=2).fit_transform(df_scores)
 
 #%%
 #Plot
-fig = plt.figure(figsize = (15, 10))
+fig = plt.figure(figsize = (12, 8))
 ax = fig.add_subplot(111)
 ax.set_frame_on(False)
 plt.scatter(tsneGames[:, 0], tsneGames[:, 1], alpha=1) #Making the points invisible
 for i, word in enumerate(CORE_GAMES):
-    ax.annotate(word, (tsneGames[:, 0][i], tsneGames[:, 1][i]))
+    ax.annotate(word, (tsneGames[:, 0][i], tsneGames[:, 1][i]), horizontalalignment='center', alpha=0.7)
 plt.xticks(())
 plt.yticks(())
-plt.savefig(r'..\img\2-1_tsne')
-plt.show()
+plt.title('Core game projection\n n = 50, projection = tsne')
+# plt.savefig(r'..\img\2-1_tsne')
+# plt.show()
 plt.close()
 
 
@@ -53,9 +54,10 @@ ax = fig.add_subplot(111)
 ax.set_frame_on(False)
 plt.scatter(tsteGames.x, tsteGames.y, alpha=1) #Making the points invisible
 for i, word in enumerate(CORE_GAMES):
-    ax.annotate(word, (tsteGames.x[i],tsteGames.y[i]))
+    ax.annotate(word, (tsteGames.x[i], tsteGames.y[i]), horizontalalignment='center', alpha=0.7)
 plt.xticks(())
 plt.yticks(())
+plt.title('Core game projection\n n = 50, projection = tste')
 plt.savefig(r'..\img\2-1_tste2')
 plt.show()
 plt.close()

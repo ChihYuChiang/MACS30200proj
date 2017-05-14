@@ -14,7 +14,7 @@ from sklearn.neural_network import MLPClassifier
 #--Read in data
 D2V_WOstop = gensim.models.Doc2Vec.load(r'..\data\process\D2V_WOstop')
 df_core = pickle.load(open(r'..\data\process\core_cluster.p', 'rb'))
-df = pickle.load(open(r'..\data\process\score_new_doc2vec.p', 'rb')) #df with distances from the last step
+df = pickle.load(open(r'..\data\process\score_300_doc2vec.p', 'rb')) #df with distances from the last step
 
 
 #%%
@@ -27,19 +27,19 @@ other_groups = []
 other_titles = []
 
 for index, row in df.iterrows():
-    idTag = 'id_' + str(row['Id'])
+    idTag = 'id_' + str(index)
     vec = D2V_WOstop.docvecs[idTag]
-    title = row['Game Title']
-    if row['Core'] > 0:
-        group = (df_core[df_core['core_id'] == row['Core']])['group_label'].values[0]
+    title = row['Game']
+    if row['CoreID'] > 0:
+        group = (df_core[df_core['core_id'] == row['CoreID']])['group_label'].values[0]
         core_idTags.append(idTag)
         core_groups.append(group)
-    elif row['Core'] == 0:
+    elif row['CoreID'] == 0:
         other_idTags.append(idTag)
         other_titles.append(title)
 
-core_vec = df.query('Core > 0').filter(regex=('^group\d+$'))
-other_vec = df.query('Core == 0').filter(regex=('^group\d+$'))
+core_vec = df.query('CoreID > 0').filter(regex=('^group\d+$'))
+other_vec = df.query('CoreID == 0').filter(regex=('^group\d+$'))
 
 numOfCluster = len(df_core.group_label.unique())
 
@@ -70,9 +70,9 @@ labels.shape
 
 #%%
 #Save the predicted clusters
-df_predicted = df.query('Core == 0').copy()
+df_predicted = df.query('CoreID == 0').copy()
 df_predicted['Predicted'] = labels
-df_predicted.to_csv(r'..\data\output\df_predicted_doc2vec.csv', index=False, encoding='utf-8')
+df_predicted.to_csv(r'..\data\output\df_predicted_keyG.csv', index=False, encoding='utf-8')
 
 #%%
 #Prepare games to be plotted
@@ -89,17 +89,17 @@ for game in TARGET:
 #--Color map for predicted labels
 #Make color dictionery
 colordict = {
-0: 'red',
-1: 'orange',
-2: 'green',
-3: 'blue',
-4: 'c',
-5: 'm',
-6: 'y',
-7: 'k',
-8: 'bisque',
-9: 'aquamarine',
-10: 'blanchedalmond',
+0: '#d53e4f',
+1: '#f46d43',
+2: '#fdae61',
+3: '#ffffbf',
+4: '#abdda4',
+5: '#66c2a5',
+6: '#3288bd',
+7: '#fee08b',
+8: '#88ddaa',
+9: '#71acbc',
+10: '#e6f598',
 11: 'chartreuse',
 12: 'cornsilk',
 13: 'darkcyan',
@@ -119,11 +119,12 @@ ax = fig.add_subplot(111)
 ax.set_frame_on(False)
 plt.scatter(x_other, y_other, color = colors_p, alpha = 0.5)
 for i, word in enumerate(TARGET):
-    ax.annotate(word, (coor_target[i][0],coor_target[i][1]))
+    ax.annotate(word, (coor_target[i][0],coor_target[i][1]),
+    horizontalalignment='center', alpha=0.7)
 plt.xticks(())
 plt.yticks(())
-plt.title('Predicted Clusters\n k = {}'.format(numOfCluster))
-plt.savefig(r'..\img\2-3-1_k-mean_PCA_' + str(numOfCluster))
+plt.title('All games with color representing predicted cluster\n classification: Neural Nets (MLP)\n k = {}, n = 15,372, projection = PCA'.format(numOfCluster))
+plt.savefig(r'..\img\2-3-1_PCA_' + str(numOfCluster))
 plt.show()
 plt.close()
 
@@ -134,10 +135,11 @@ ax = fig.add_subplot(111)
 ax.set_frame_on(False)
 plt.scatter(x_other_tsne, y_other_tsne, color = colors_p, alpha = 0.5)
 for i, word in enumerate(TARGET):
-    ax.annotate(word, (coor_target_tsne[i][0],coor_target_tsne[i][1]))
+    ax.annotate(word, (coor_target_tsne[i][0],coor_target_tsne[i][1]),
+    horizontalalignment='center', alpha=0.7)
 plt.xticks(())
 plt.yticks(())
-plt.title('Predicted Clusters\n k = {}'.format(numOfCluster))
-plt.savefig(r'..\img\2-3-1_k-mean_tsne_' + str(numOfCluster))
+plt.title('All games with color representing predicted cluster\n classification: Neural Nets (MLP)\n k = {}, n = 15,372, projection = tsne'.format(numOfCluster))
+plt.savefig(r'..\img\2-3-1_tsne_' + str(numOfCluster))
 plt.show()
 plt.close()

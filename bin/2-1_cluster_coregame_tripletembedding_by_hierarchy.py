@@ -38,8 +38,8 @@ plt.title('Hierarchical Clustering Dendrogram')
 plt.xlabel('sample index')
 plt.ylabel('distance')
 ax = scluster.hierarchy.dendrogram(linkageMatrix, truncate_mode='level', leaf_rotation=90, leaf_font_size=8)
-plt.savefig(r'..\img\2-1_ward')
-plt.show()
+# plt.savefig(r'..\img\2-1_ward')
+# plt.show()
 plt.close()
 
 
@@ -49,11 +49,18 @@ plt.close()
 last = linkageMatrix[-30:, 2]
 last_rev = last[::-1]
 idxs = np.arange(1, len(last) + 1)
-plt.plot(idxs, last_rev)
+fig, ax = plt.subplots(1, 1)
+ax.yaxis.grid(True)
+plt.plot(idxs, last_rev, label='Distance growth')
 
 acceleration = np.diff(last, 2)  # 2nd derivative of the distances
 acceleration_rev = acceleration[::-1]
-plt.plot(idxs[:-2] + 1, acceleration_rev)
+plt.plot(idxs[:-2] + 1, acceleration_rev, label='Distance acceleration')
+plt.axvline(x=7, color='#bababa', linestyle='--')
+ax.legend(loc='right')
+plt.title('Distance growth and distance acceleration')
+plt.xlabel('Number of cluster')
+plt.ylabel('Distance')
 plt.savefig(r'..\img\2-1_ward_elbow')
 plt.show()
 plt.close()
@@ -93,6 +100,7 @@ coreCluster = pd.DataFrame({
     'group_label': wardCluster(numClusters).cluster
     })
 pickle.dump(coreCluster, open(r'..\data\process\core_cluster.p', 'wb'))
+coreCluster.to_csv(r'..\data\output\core_cluster.csv',  encoding='utf-8')
 
 
 #%%
@@ -102,17 +110,17 @@ tsteGames = pd.read_csv(r'..\data\process\tste\tste_embedding_2.csv', names=['x'
 
 #Make color dictionery
 colordict = {
-0: 'red',
-1: 'orange',
-2: 'green',
-3: 'blue',
-4: 'c',
-5: 'm',
-6: 'y',
-7: 'k',
-8: 'bisque',
-9: 'aquamarine',
-10: 'blanchedalmond',
+0: '#d53e4f',
+1: '#f46d43',
+2: '#fdae61',
+3: '#ffffbf',
+4: '#abdda4',
+5: '#66c2a5',
+6: '#3288bd',
+7: '#fee08b',
+8: '#88ddaa',
+9: '#71acbc',
+10: '#e6f598',
 11: 'chartreuse',
 12: 'cornsilk',
 13: 'darkcyan',
@@ -128,15 +136,17 @@ colordict = {
 
 #%%
 #--Color map for predicted labels (tste)
-colors_p = [colordict[l] for l in km.labels_]
-fig = plt.figure(figsize = (10,6))
+colors_p = [colordict[l] for l in range(1, numClusters + 1)]
+fig = plt.figure(figsize = (12,8))
 ax = fig.add_subplot(111)
 ax.set_frame_on(False)
-plt.scatter(tsteGames.x, tsteGames.y, color = colors_p, alpha = 0.5)
+plt.scatter(tsteGames.x, tsteGames.y, color=colors_p, alpha=1)
 for i, word in enumerate(CORE_GAMES):
-    ax.annotate(word, (tsteGames.x[i],tsteGames.y[i]))
+    ax.annotate(word,
+    (tsteGames.x[i],tsteGames.y[i]),
+    horizontalalignment='center', alpha=0.7)
 plt.xticks(())
 plt.yticks(())
-plt.title('Predicted Clusters\n k = {}'.format(numClusters))
+plt.title('Core game projection with color representing cluster\n clustering method = Wald\n k = {}, n = 50, projection = tste'.format(numClusters))
 plt.savefig(r'..\img\2-1_ward_tste2_' + str(numClusters))
 plt.show()

@@ -13,24 +13,23 @@ from nltk.corpus import stopwords
 import sklearn.feature_extraction
 import sklearn.manifold
 
-
 #%%
 #--Switches (use only one True a time)
 tfidf = False
-count = True
+count = False
 keywordGroup = False
-keyword = False
-
+keyword = True
+numOfCluster = 7
 
 #%%
 #--Read in data
-df = pd.read_csv(r'..\data\output\df_predicted_all_doc2vec.csv', encoding='utf-8')
+df = pd.read_csv(r'..\data\output\df_predicted.csv', encoding='utf-8')
 numOfCluster = len(df['Predicted'].unique())
 
-df_raw = pd.read_csv(r'..\data\df_cb_main_expand25.csv', encoding='utf-8', error_bad_lines=False).dropna(subset=['Review']).drop_duplicates(['Author Name', 'Game Title'])
+df_raw = pd.read_csv(r'..\data\df_cb_main_combined.csv', index_col=0, encoding='utf-8', error_bad_lines=False).dropna(subset=['Review']).drop_duplicates(['Author', 'Game'])
 df_raw.shape
 
-df_keygroup = pd.read_csv(r'..\data\output\df_predicted_doc2vec.csv', encoding='utf-8')
+df_keygroup = pd.read_csv(r'..\data\output\df_predicted_keyG.csv', encoding='utf-8')
 
 keyWords, keyWordSubMatrix = pickle.load(open(r'..\data\process\keywordVecs.p', 'rb'))
 print(len(keyWords))
@@ -116,98 +115,11 @@ if tfidf:
 
 '''
 ------------------------------------------------------------
-Count - normalized + wordcloud
-------------------------------------------------------------
-'''
-#%%
-if count:
-    #--Normalize
-    groupReview_normalized = []
-    freqs = []
-    for text in groupReview:
-        tokens = nltk.word_tokenize(text)
-        normalized = normlizeTokens(tokens, stopwordLst=stop_words_nltk, stemmer=snowball, lemmer=wordnet)
-        freq = nltk.FreqDist(normalized)
-
-        groupReview_normalized.append(normalized)
-        freqs.append(freq)
-
-
-    #%%
-    #--Wordcloud
-    #Exclude last 250 words
-    excludeTop = 250
-    for i in np.arange(len(freqs)):
-        x = pd.DataFrame(freqs[i], index=np.arange(len(freqs[i])))
-        y = pd.DataFrame(x.iloc[0]).sort_values(0)[:-excludeTop]
-
-        z = []
-        for w, f in y.itertuples():
-            z.append((w, f))
-
-        wc = wordcloud.WordCloud(background_color="white", max_words=200, max_font_size=200, width= 1500, height=1500, mode ='RGBA', scale=.5, ).fit_words(z)
-        plt.imshow(wc)
-        plt.axis("off")
-        plt.savefig(r'..\img\2-4_highFreqWords_group' + str(i + 1) + '_exclude' + str(excludeTop))
-        plt.show()
-        plt.close()
-
-
-
-
-'''
-------------------------------------------------------------
 Keyword Group Scores
 ------------------------------------------------------------
 '''
 #%%
 if keywordGroup:
-    df_keygroupScore = pd.merge(df_keygroup, df.filter(['Id', 'Predicted']), on='Id', how='left')
+    df_keygroupScore = pd.merge(df_keygroup, df.filter(['Predicted']), left_index=True, right_index=True)
     df_keygroupScores = df_keygroupScore.groupby(by=['Predicted_x']).mean().filter(regex='^group\d+$')
     df_keygroupScores.to_csv(r'..\data\output\df_keygroupScores.csv',  encoding='utf-8')
-
-
-
-
-'''
-------------------------------------------------------------
-Keyword Count
-------------------------------------------------------------
-'''
-#%%
-if keyword:
-    #--Normalize and count with only keywords
-    groupReview_normalized = []
-    freqs = []
-    for text in groupReview:
-        tokens = nltk.word_tokenize(text)
-        normalized = normlizeTokens(tokens, stopwordLst=stop_words_nltk, vocab=keyWords)
-        freq = nltk.FreqDist(normalized)
-
-        groupReview_normalized.append(normalized)
-        freqs.append(freq)
-
-
-    #%%
-    #--Top words and wordcloud
-    #Exclude last 125 words
-    excludeTop = 125
-    for i in np.arange(len(freqs)):
-        x = pd.DataFrame(freqs[i], index=np.arange(len(freqs[i])))
-        y = pd.DataFrame(x.iloc[0]).sort_values(0)[:-excludeTop]
-
-        #Print the top words
-        print('Most frequent keywords of group {}:'.format(i + 1))
-        print(y[-30:])
-
-        #Create wordclouds
-        z = []
-        for w, f in y.itertuples():
-            z.append((w, f))
-        
-        wc = wordcloud.WordCloud(background_color="white", max_words=200, max_font_size=200, width= 1500, height=1500, mode ='RGBA', scale=.5, ).fit_words(z)
-        plt.imshow(wc)
-        plt.axis("off")
-        plt.savefig(r'..\img\2-4_highFreqKeyWords_group' + str(i + 1) + '_exclude' + str(excludeTop))
-        plt.show()
-        plt.close()
