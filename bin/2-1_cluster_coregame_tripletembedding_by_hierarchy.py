@@ -136,7 +136,7 @@ colordict = {
 
 #%%
 #--Color map for predicted labels (tste)
-colors_p = [colordict[l] for l in range(1, numClusters + 1)]
+colors_p = [colordict[l] for l in coreCluster.group_label]
 fig = plt.figure(figsize = (12,8))
 ax = fig.add_subplot(111)
 ax.set_frame_on(False)
