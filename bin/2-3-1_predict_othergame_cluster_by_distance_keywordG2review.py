@@ -14,7 +14,7 @@ from sklearn.neural_network import MLPClassifier
 #--Read in data
 D2V_WOstop = gensim.models.Doc2Vec.load(r'..\data\process\D2V_WOstop')
 df_core = pickle.load(open(r'..\data\process\core_cluster.p', 'rb'))
-df = pickle.load(open(r'..\data\process\score_300_doc2vec.p', 'rb')) #df with distances from the last step
+df = pickle.load(open(r'..\data\process\score_30_doc2vec.p', 'rb')) #df with distances from the last step
 
 
 #%%
@@ -134,12 +134,12 @@ fig = plt.figure(figsize = (10,6))
 ax = fig.add_subplot(111)
 ax.set_frame_on(False)
 plt.scatter(x_other_tsne, y_other_tsne, color = colors_p, alpha = 0.5)
-for i, word in enumerate(TARGET):
-    ax.annotate(word, (coor_target_tsne[i][0],coor_target_tsne[i][1]),
-    horizontalalignment='center', alpha=0.7)
+# for i, word in enumerate(TARGET):
+#     ax.annotate(word, (coor_target_tsne[i][0],coor_target_tsne[i][1]),
+#     horizontalalignment='center', alpha=0.7)
 plt.xticks(())
 plt.yticks(())
-plt.title('All games with color representing predicted cluster\n classification: Neural Nets (MLP)\n k = {}, n = 15,372, projection = tsne'.format(numOfCluster))
+plt.title('All games with color representing predicted cluster\n classification: Neural Nets (MLP) with 30-cluster input\n k = {}, n = 15,372, projection = tsne'.format(numOfCluster))
 plt.savefig(r'..\img\2-3-1_tsne_' + str(numOfCluster))
 plt.show()
 plt.close()

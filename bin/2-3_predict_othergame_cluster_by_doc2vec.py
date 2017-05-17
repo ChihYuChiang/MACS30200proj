@@ -143,7 +143,7 @@ for i, word in enumerate(TARGET):
     horizontalalignment='center', alpha=0.7)
 plt.xticks(())
 plt.yticks(())
-plt.title('All games with color representing predicted cluster\n classification: Neural Nets (MLP)\n k = {}, n = 15,372, projection = tsne'.format(numOfCluster))
+plt.title('All games with color representing predicted cluster\n classification: Neural Nets (MLP) with document vector input\n k = {}, n = 15,372, projection = tsne'.format(numOfCluster))
 plt.savefig(r'..\img\2-3_tsne_' + str(numOfCluster))
 plt.show()
 plt.close()
