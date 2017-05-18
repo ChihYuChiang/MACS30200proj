@@ -80,7 +80,7 @@ for train, test in dfs:
 
     #Initialize and train the model
     clf = sklearn.svm.SVC(kernel='linear', probability=False)
-    clf.fit(df_train.filter(regex='group[0-9]+', axis=1), df_train['group'])
+    clf.fit(df_train.filter(regex='[0-9]+', axis=1), df_train['group'])
     labels = clf.predict(df_test.filter(regex='[0-9]+', axis=1))
 
     #Evaluation
