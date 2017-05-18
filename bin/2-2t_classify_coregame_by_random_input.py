@@ -49,7 +49,7 @@ df_core_expand = pd.DataFrame({
 
 #Core game vecs
 keyGNum = 300
-np.random.seed(2)
+np.random.seed(4)
 coreVecs = pd.DataFrame(np.random.rand(len(df_core_expand), keyGNum))
 pd.DataFrame(coreVecs)
 
