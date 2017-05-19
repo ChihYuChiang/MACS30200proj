@@ -14,6 +14,10 @@ from sklearn.ensemble import BaggingClassifier, RandomForestRegressor
 from sklearn.naive_bayes import MultinomialNB
 from sklearn.model_selection import KFold
 
+import warnings
+#Ignore all warnings
+warnings.simplefilter('ignore', category=Warning)
+
 
 #%%
 #--Read in data
@@ -58,8 +62,6 @@ df_core_expand.groupby(['group']).count()
 kf = KFold(n_splits=len(df_core_expand), shuffle=False, random_state=2017)
 
 
-
-
 '''
 ------------------------------------------------------------
 SVM
@@ -74,6 +76,7 @@ recalls    = []
 f1s        = []
 labels_real = np.empty(shape=(0,0))
 labels_predicted = np.empty(shape=(0,0))
+genreScores = np.empty(shape=(0,numOfCluster))
 
 
 #--Train all models
@@ -82,7 +85,7 @@ for train, test in dfs:
     df_test = df_core_expand.loc[test]
 
     #Initialize and train the model
-    clf = sklearn.svm.SVC(kernel='linear', probability=False)
+    clf = sklearn.svm.SVC(kernel='linear', probability=True)
     clf.fit(df_train.filter(regex='[0-9]+', axis=1), df_train['group'])
     labels = clf.predict(df_test.filter(regex='[0-9]+', axis=1))
 
@@ -94,6 +97,17 @@ for train, test in dfs:
     #Record true and predicted labels
     labels_real = np.append(labels_real, np.array(df_test['group']))
     labels_predicted = np.append(labels_predicted, labels)
+
+    #Acquire score (probability) for each genre
+    genreScore = clf.predict_proba(df_test.filter(regex='[0-9]+', axis=1))
+    genreScores = np.append(genreScores, genreScore, axis=0)
+
+
+#%%
+#--Save genre scores
+genreScores = pd.DataFrame(genreScores)
+genreScores.columns = np.arange(1, numOfCluster + 1)
+genreScores.to_csv(r'..\data\output\genreScore_SVM_' + str(numOfCluster) + '.csv')
 
 
 #%%
@@ -133,6 +147,7 @@ recalls    = []
 f1s        = []
 labels_real = np.empty(shape=(0,0))
 labels_predicted = np.empty(shape=(0,0))
+genreScores = np.empty(shape=(0,numOfCluster))
 
 
 #--Train all models
@@ -153,6 +168,16 @@ for train, test in dfs:
     #Record true and predicted labels
     labels_real = np.append(labels_real, np.array(df_test['group']))
     labels_predicted = np.append(labels_predicted, labels)
+
+    #Acquire score (probability) for each genre
+    genreScore = clf.predict_proba(df_test.filter(regex='[0-9]+', axis=1))
+    genreScores = np.append(genreScores, genreScore, axis=0)
+
+#%%
+#--Save genre scores
+genreScores = pd.DataFrame(genreScores)
+genreScores.columns = np.arange(1, numOfCluster + 1)
+genreScores.to_csv(r'..\data\output\genreScore_NN_' + str(numOfCluster) + '.csv')
 
 
 #%%
@@ -192,6 +217,7 @@ recalls    = []
 f1s        = []
 labels_real = np.empty(shape=(0,0))
 labels_predicted = np.empty(shape=(0,0))
+genreScores = np.empty(shape=(0,numOfCluster))
 
 
 #--Train all models
@@ -217,6 +243,17 @@ for train, test in dfs:
     #Record true and predicted labels
     labels_real = np.append(labels_real, np.array(df_test['group']))
     labels_predicted = np.append(labels_predicted, labels)
+
+    #Acquire score (probability) for each genre
+    genreScore = clf.predict_proba(df_test.filter(regex='[0-9]+', axis=1))
+    genreScores = np.append(genreScores, genreScore, axis=0)
+
+
+#%%
+#--Save genre scores
+genreScores = pd.DataFrame(genreScores)
+genreScores.columns = np.arange(1, numOfCluster + 1)
+genreScores.to_csv(r'..\data\output\genreScore_RF_' + str(numOfCluster) + '.csv')
 
 
 #%%
@@ -256,6 +293,7 @@ recalls    = []
 f1s        = []
 labels_real = np.empty(shape=(0,0))
 labels_predicted = np.empty(shape=(0,0))
+genreScores = np.empty(shape=(0,numOfCluster))
 
 
 #%%
@@ -277,6 +315,16 @@ for train, test in dfs:
     #Record true and predicted labels
     labels_real = np.append(labels_real, np.array(df_test['group']))
     labels_predicted = np.append(labels_predicted, labels)
+
+    #Acquire score (probability) for each genre
+    genreScore = clf.predict_proba(df_test.filter(regex='[0-9]+', axis=1))
+    genreScores = np.append(genreScores, genreScore, axis=0)
+
+
+#--Save genre scores
+genreScores = pd.DataFrame(genreScores)
+genreScores.columns = np.arange(1, numOfCluster + 1)
+genreScores.to_csv(r'..\data\output\genreScore_NB_' + str(numOfCluster) + '.csv')
 
 
 #%%
