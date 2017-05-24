@@ -16,7 +16,7 @@ df = pd.read_csv(r'..\data\df_cb_main_combined.csv', index_col=0, encoding='utf-
 D2VFeatures = D2V_WOstop.vocab.keys()
 
 #Setup target keyword group cluster
-numOfGroups = [300, 1000]
+numOfGroups = [10, 30, 100, 300, 1000]
 
 
 #%%

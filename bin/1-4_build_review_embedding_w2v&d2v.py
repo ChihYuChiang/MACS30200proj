@@ -54,7 +54,22 @@ if D2V:
 
 
     #%%
-    #--Gensim implementation of Doc2Vec -- without stopwords
+    #--Gensim implementation of Doc2Vec -- with stopwords
     D2V_WOstop = gensim.models.doc2vec.Doc2Vec(df['TaggedReview'], size=300, workers=6) #Limiting to 300 dimensions
     D2V_WOstop.save(r'..\data\process\D2V_WOstop')
-    D2V_WOstop.docvecs.doctags
+
+
+    #%%
+    #--Tag docs by game title
+    taggedDocs = []
+    for index, row in df.iterrows():
+        taggedDocs.append(gensim.models.doc2vec.LabeledSentence(words=row['Review_normalized_arti_Wstop'], tags=[row['Game'], 'id_' + str(index)]))
+    df['TaggedReview'] = taggedDocs
+
+
+    #%%
+    #--Gensim implementation of Doc2Vec -- without stopwords
+    D2V_Wstop = gensim.models.doc2vec.Doc2Vec(df['TaggedReview'], size=300, workers=6) #Limiting to 300 dimensions
+    D2V_Wstop.save(r'..\data\process\D2V_Wstop')
+    D2V_Wstop.docvecs.doctags
+
