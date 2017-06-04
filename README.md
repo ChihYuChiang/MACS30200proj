@@ -5,7 +5,7 @@ How can subjective experiences be logically portrayed? For experience-intensive 
 
 ```
 Note:
-* The scripts used to perform the analyses are provided in the [bin](/bin) folder.
+* The scripts used to perform the analyses are provided in the [/bin] folder.
 * All survey data applied in this project is available by request.
 * All text data applied in this project belongs to the original websites.
 ```
