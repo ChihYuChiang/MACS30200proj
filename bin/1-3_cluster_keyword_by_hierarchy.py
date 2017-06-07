@@ -48,7 +48,7 @@ plt.close()
 linkageMatrix = pickle.load(open(r'..\data\process\wardLinkageMatrix.p', 'rb'))
 
 #This gives us an array giving each element of linkageMatrix's cluster
-numClusters = 10000
+numClusters = 300
 hierarchicalClusters = scluster.hierarchy.fcluster(linkageMatrix, numClusters, 'maxclust')
 df_cluster = pd.DataFrame({
     'cluster': hierarchicalClusters,
@@ -64,6 +64,27 @@ for i in range(numClusters):
     titles = df_cluster.query('cluster == @i + 1')[ :20]
     print("Cluster {}:".format(i))
     print(titles)
+
+
+#%%
+#--Identify the keyword nearest to the group center
+targetGroup = 60
+
+#Acquire the keywords belong to the target group
+targetWords = df_cluster.query('cluster == @gn')
+
+#Acquire the vectors corresponding to those keywords
+targetIndex = list(df_cluster.query('cluster == @gn').index)
+targetVecs = [keyWordSubMatrix[index] for index in targetIndex]
+
+#Acquire the centroid of the group
+targetCentroid = np.mean(targetVecs, axis=0)
+
+#Compute each word's distance to the centroid
+dis2Centroid = spsd.cdist([targetCentroid], targetVecs, 'cosine')[0]
+
+#Find the keyword closest to the centroid
+print([list(w.keyword)[i] for i, dist in enumerate(dis2Centroid) if dist == max(dis2Centroid)])
 
 
 #%%
