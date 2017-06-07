@@ -13,6 +13,8 @@ from sklearn.tree import DecisionTreeRegressor, DecisionTreeClassifier
 from sklearn.ensemble import BaggingClassifier, RandomForestRegressor
 from sklearn.naive_bayes import MultinomialNB
 from sklearn.model_selection import KFold
+from sklearn.linear_model import LogisticRegression
+from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 
 import warnings
 #Ignore all warnings
@@ -344,5 +346,147 @@ plt.title('Confusion Matrix - Multinomial Naive Bayes')
 plt.xlabel('true label')
 plt.ylabel('predicted label')
 plt.savefig(r'..\img\2-2_confusion_NB_' + str(numOfCluster))
+plt.show()
+plt.close()
+
+
+
+
+'''
+------------------------------------------------------------
+Logistics
+------------------------------------------------------------
+'''
+#%%
+#--Setting up
+#Data splitting and provide empty bottles
+dfs = kf.split(df_core_expand)
+precisions = []
+recalls    = []
+f1s        = []
+labels_real = np.empty(shape=(0,0))
+labels_predicted = np.empty(shape=(0,0))
+genreScores = np.empty(shape=(0,numOfCluster))
+
+
+#%%
+#--Train all models
+for train, test in dfs:
+    df_train = df_core_expand.loc[train]
+    df_test = df_core_expand.loc[test]
+
+    #Initialize and train the model
+    clf = LogisticRegression(multi_class='multinomial', solver='sag')
+    clf.fit(df_train.filter(regex='[0-9]+', axis=1), df_train['group'])
+    labels = clf.predict(df_test.filter(regex='[0-9]+', axis=1))
+
+    #Evaluation
+    precisions.append(sklearn.metrics.precision_score(df_test['group'], labels, average = 'weighted'))
+    recalls.append(sklearn.metrics.recall_score(df_test['group'], labels, average = 'weighted'))
+    f1s.append(sklearn.metrics.f1_score(df_test['group'], labels, average = 'weighted'))
+
+    #Record true and predicted labels
+    labels_real = np.append(labels_real, np.array(df_test['group']))
+    labels_predicted = np.append(labels_predicted, labels)
+
+    #Acquire score (probability) for each genre
+    genreScore = clf.predict_proba(df_test.filter(regex='[0-9]+', axis=1))
+    genreScores = np.append(genreScores, genreScore, axis=0)
+
+
+#--Save genre scores
+genreScores = pd.DataFrame(genreScores)
+genreScores.columns = np.arange(1, numOfCluster + 1)
+genreScores.to_csv(r'..\data\output\genreScore_L_' + str(numOfCluster) + '.csv')
+
+
+#%%
+#--Evaluate all models
+#Indicators
+print('precision: ' + str(np.mean(precisions)))
+print('recall: ' + str(np.mean(recalls)))
+print('f1 measure: ' + str(np.mean(f1s)))
+
+#%%
+#Confusion matrix
+mat = confusion_matrix(labels_real, labels_predicted)
+seaborn.heatmap(mat.T, square=True, annot=True, fmt='d', cbar=False,
+                xticklabels=np.arange(1, numOfCluster + 1),
+                yticklabels=np.arange(1, numOfCluster + 1))
+plt.title('Confusion Matrix - Logistic Regression')
+plt.xlabel('true label')
+plt.ylabel('predicted label')
+plt.savefig(r'..\img\2-2_confusion_L_' + str(numOfCluster))
+plt.show()
+plt.close()
+
+
+
+
+'''
+------------------------------------------------------------
+Discriminant
+------------------------------------------------------------
+'''
+#%%
+#--Setting up
+#Data splitting and provide empty bottles
+dfs = kf.split(df_core_expand)
+precisions = []
+recalls    = []
+f1s        = []
+labels_real = np.empty(shape=(0,0))
+labels_predicted = np.empty(shape=(0,0))
+genreScores = np.empty(shape=(0,numOfCluster))
+
+
+#%%
+#--Train all models
+for train, test in dfs:
+    df_train = df_core_expand.loc[train]
+    df_test = df_core_expand.loc[test]
+
+    #Initialize and train the model
+    clf = LinearDiscriminantAnalysis(solver='lsqr')
+    clf.fit(df_train.filter(regex='[0-9]+', axis=1), df_train['group'])
+    labels = clf.predict(df_test.filter(regex='[0-9]+', axis=1))
+
+    #Evaluation
+    precisions.append(sklearn.metrics.precision_score(df_test['group'], labels, average = 'weighted'))
+    recalls.append(sklearn.metrics.recall_score(df_test['group'], labels, average = 'weighted'))
+    f1s.append(sklearn.metrics.f1_score(df_test['group'], labels, average = 'weighted'))
+
+    #Record true and predicted labels
+    labels_real = np.append(labels_real, np.array(df_test['group']))
+    labels_predicted = np.append(labels_predicted, labels)
+
+    #Acquire score (probability) for each genre
+    genreScore = clf.predict_proba(df_test.filter(regex='[0-9]+', axis=1))
+    genreScores = np.append(genreScores, genreScore, axis=0)
+
+
+#--Save genre scores
+genreScores = pd.DataFrame(genreScores)
+genreScores.columns = np.arange(1, numOfCluster + 1)
+genreScores.to_csv(r'..\data\output\genreScore_D_' + str(numOfCluster) + '.csv')
+
+
+#%%
+#--Evaluate all models
+#Indicators
+print('precision: ' + str(np.mean(precisions)))
+print('recall: ' + str(np.mean(recalls)))
+print('f1 measure: ' + str(np.mean(f1s)))
+
+#%%
+#Confusion matrix
+mat = confusion_matrix(labels_real, labels_predicted)
+seaborn.heatmap(mat.T, square=True, annot=True, fmt='d', cbar=False,
+                xticklabels=np.arange(1, numOfCluster + 1),
+                yticklabels=np.arange(1, numOfCluster + 1))
+plt.title('Confusion Matrix - Linear Discriminant')
+plt.xlabel('true label')
+plt.ylabel('predicted label')
+plt.savefig(r'..\img\2-2_confusion_D_' + str(numOfCluster))
 plt.show()
 plt.close()
