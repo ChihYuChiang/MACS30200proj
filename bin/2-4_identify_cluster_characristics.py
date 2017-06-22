@@ -122,4 +122,4 @@ Keyword Group Scores
 if keywordGroup:
     df_keygroupScore = pd.merge(df_keygroup, df.filter(['Predicted']), left_index=True, right_index=True)
     df_keygroupScores = df_keygroupScore.groupby(by=['Predicted_x']).mean().filter(regex='^group\d+$')
-    df_keygroupScores.to_csv(r'..\data\output\df_keygroupScores.csv',  encoding='utf-8')
+    df_keygroupScores.to_csv(r'..\data\output\keygroupScores.csv',  encoding='utf-8')

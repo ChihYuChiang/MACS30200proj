@@ -106,10 +106,15 @@ for train, test in dfs:
 
 
 #%%
-#--Save genre scores
-genreScores = pd.DataFrame(genreScores)
-genreScores.columns = np.arange(1, numOfCluster + 1)
-genreScores.to_csv(r'..\data\output\genreScore_SVM_' + str(numOfCluster) + '.csv')
+#--Save genre prediction and scores
+dic = {
+    'idTag': idTags,
+    'genre_real': groups,
+    'genre_predicted': labels_predicted
+}
+output = pd.merge(pd.DataFrame(dic), pd.DataFrame(genreScores, columns=np.arange(1, numOfCluster + 1)), left_index=True, right_index=True)
+
+output.to_csv(r'..\data\output\genreScore_SVM_' + str(numOfCluster) + '.csv')
 
 
 #%%
@@ -176,10 +181,15 @@ for train, test in dfs:
     genreScores = np.append(genreScores, genreScore, axis=0)
 
 #%%
-#--Save genre scores
-genreScores = pd.DataFrame(genreScores)
-genreScores.columns = np.arange(1, numOfCluster + 1)
-genreScores.to_csv(r'..\data\output\genreScore_NN_' + str(numOfCluster) + '.csv')
+#--Save genre prediction and scores
+dic = {
+    'idTag': idTags,
+    'genre_real': groups,
+    'genre_predicted': labels_predicted
+}
+output = pd.merge(pd.DataFrame(dic), pd.DataFrame(genreScores, columns=np.arange(1, numOfCluster + 1)), left_index=True, right_index=True)
+
+output.to_csv(r'..\data\output\genreScore_NN_' + str(numOfCluster) + '.csv')
 
 
 #%%
@@ -252,10 +262,15 @@ for train, test in dfs:
 
 
 #%%
-#--Save genre scores
-genreScores = pd.DataFrame(genreScores)
-genreScores.columns = np.arange(1, numOfCluster + 1)
-genreScores.to_csv(r'..\data\output\genreScore_RF_' + str(numOfCluster) + '.csv')
+#--Save genre prediction and scores
+dic = {
+    'idTag': idTags,
+    'genre_real': groups,
+    'genre_predicted': labels_predicted
+}
+output = pd.merge(pd.DataFrame(dic), pd.DataFrame(genreScores, columns=np.arange(1, numOfCluster + 1)), left_index=True, right_index=True)
+
+output.to_csv(r'..\data\output\genreScore_RF_' + str(numOfCluster) + '.csv')
 
 
 #%%
@@ -323,10 +338,15 @@ for train, test in dfs:
     genreScores = np.append(genreScores, genreScore, axis=0)
 
 
-#--Save genre scores
-genreScores = pd.DataFrame(genreScores)
-genreScores.columns = np.arange(1, numOfCluster + 1)
-genreScores.to_csv(r'..\data\output\genreScore_NB_' + str(numOfCluster) + '.csv')
+#--Save genre prediction and scores
+dic = {
+    'idTag': idTags,
+    'genre_real': groups,
+    'genre_predicted': labels_predicted
+}
+output = pd.merge(pd.DataFrame(dic), pd.DataFrame(genreScores, columns=np.arange(1, numOfCluster + 1)), left_index=True, right_index=True)
+
+output.to_csv(r'..\data\output\genreScore_NB_' + str(numOfCluster) + '.csv')
 
 
 #%%
@@ -394,10 +414,15 @@ for train, test in dfs:
     genreScores = np.append(genreScores, genreScore, axis=0)
 
 
-#--Save genre scores
-genreScores = pd.DataFrame(genreScores)
-genreScores.columns = np.arange(1, numOfCluster + 1)
-genreScores.to_csv(r'..\data\output\genreScore_L_' + str(numOfCluster) + '.csv')
+#--Save genre prediction and scores
+dic = {
+    'idTag': idTags,
+    'genre_real': groups,
+    'genre_predicted': labels_predicted
+}
+output = pd.merge(pd.DataFrame(dic), pd.DataFrame(genreScores, columns=np.arange(1, numOfCluster + 1)), left_index=True, right_index=True)
+
+output.to_csv(r'..\data\output\genreScore_L_' + str(numOfCluster) + '.csv')
 
 
 #%%
@@ -465,10 +490,15 @@ for train, test in dfs:
     genreScores = np.append(genreScores, genreScore, axis=0)
 
 
-#--Save genre scores
-genreScores = pd.DataFrame(genreScores)
-genreScores.columns = np.arange(1, numOfCluster + 1)
-genreScores.to_csv(r'..\data\output\genreScore_D_' + str(numOfCluster) + '.csv')
+#--Save genre prediction and scores
+dic = {
+    'idTag': idTags,
+    'genre_real': groups,
+    'genre_predicted': labels_predicted
+}
+output = pd.merge(pd.DataFrame(dic), pd.DataFrame(genreScores, columns=np.arange(1, numOfCluster + 1)), left_index=True, right_index=True)
+
+output.to_csv(r'..\data\output\genreScore_D_' + str(numOfCluster) + '.csv')
 
 
 #%%
