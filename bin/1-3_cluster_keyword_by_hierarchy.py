@@ -84,7 +84,7 @@ targetCentroid = np.mean(targetVecs, axis=0)
 dis2Centroid = spsd.cdist([targetCentroid], targetVecs, 'cosine')[0]
 
 #Find the keyword closest to the centroid
-print([list(w.keyword)[i] for i, dist in enumerate(dis2Centroid) if dist == max(dis2Centroid)])
+print([list(w.keyword)[i] for i, dist in enumerate(dis2Centroid) if dist == min(dis2Centroid)])
 
 
 #%%

@@ -64,6 +64,7 @@ for n in numOfGroups:
     #%%
     #--Acquire score of each key word group
     #By the average distance of the docvec and each key word group
+    #Cosine similarity here: -1 ~ 1; -1=opposite; 1=same
     for g in range(len(df_keyGroups)):
         scores = []
         try:
