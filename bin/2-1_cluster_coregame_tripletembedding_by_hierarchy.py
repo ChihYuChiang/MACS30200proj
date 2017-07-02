@@ -22,6 +22,7 @@ CORE_ID = pd.read_csv(r'..\data\raw_coregame\core_games.csv', encoding='utf-8', 
 
 #%%
 #--Compute cosine distance matrix
+#0=same; 2=opposite
 distMatrix = spsd.squareform(spsd.pdist(df_scores, metric='cosine'))
 
 
@@ -61,7 +62,7 @@ ax.legend(loc='right')
 plt.title('Distance growth and distance acceleration')
 plt.xlabel('Number of cluster')
 plt.ylabel('Distance')
-plt.savefig(r'..\img\2-1_ward_elbow')
+# plt.savefig(r'..\img\2-1_ward_elbow')
 plt.show()
 plt.close()
 
@@ -150,3 +151,37 @@ plt.yticks(())
 plt.title('Core game projection with color representing cluster\n clustering method = Wald\n k = {}, n = 50, projection = tste'.format(numClusters))
 plt.savefig(r'..\img\2-1_ward_tste2_' + str(numClusters))
 plt.show()
+
+
+
+
+'''
+------------------------------------------------------------
+Score to each cluster
+------------------------------------------------------------
+'''
+#%%
+#--Prepare data
+#Get required
+df_wk = pd.concat([coreCluster, df_scores], axis=1)
+
+#Create empty df
+df_cScore = pd.DataFrame(data=np.nan, index=CORE_ID, columns=np.arange(1, numClusters + 1))
+
+#Acquire cluster means/medians
+method = 'mean'
+if method = 'mean':
+    clusterCores = df_wk.groupby('group_label', axis=0).mean().drop('core_id', axis=1)
+if method = 'median':
+    clusterCores = df_wk.groupby('group_label', axis=0).median().drop('core_id', axis=1)
+
+
+#--Acquire scores
+for clusterId in np.arange(1, numClusters + 1):
+    for coreId in CORE_ID:
+        clusterCore = clusterCores.loc[clusterId]
+        tsteScore = df_scores.loc[coreId - 1]
+        df_cScore.loc[coreId, clusterId] = spsd.cosine(clusterCore, tsteScore)
+df_cScore.columns = ['disTo' + str(i) for i in np.arange(1, numClusters + 1)]
+
+df_cScore.to_csv(r'..\data\output\core_cluster_dist.csv',  encoding='utf-8')
