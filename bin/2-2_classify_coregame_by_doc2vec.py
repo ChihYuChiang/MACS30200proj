@@ -33,6 +33,7 @@ df_core = pickle.load(open(r'..\data\process\core_cluster.p', 'rb'))
 idTags = []
 groups = []
 coreVecs = []
+coreIds = []
 for index, row in df.iterrows():
     if row['CoreID'] > 0:
         idTag = 'id_' + str(index)
@@ -42,6 +43,7 @@ for index, row in df.iterrows():
         idTags.append(idTag)
         groups.append(group)
         coreVecs.append(vec)
+        coreIds.append(row['CoreID'])
 
 coreVecs = pd.DataFrame(coreVecs)
 
@@ -50,7 +52,8 @@ coreVecs = pd.DataFrame(coreVecs)
 #--Organize into a df
 df_core_expand = pd.DataFrame({
     'idTag': idTags,
-    'group': groups,
+    'coreId': coreIds,
+    'group': groups
 })
 df_core_expand = pd.merge(df_core_expand, coreVecs, left_index=True, right_index=True)
 numOfCluster = len(df_core_expand.group.unique())
@@ -109,12 +112,17 @@ for train, test in dfs:
 #--Save genre prediction and scores
 dic = {
     'idTag': idTags,
+    'coreId': coreIds,
     'genre_real': groups,
     'genre_predicted': labels_predicted
 }
 output = pd.merge(pd.DataFrame(dic), pd.DataFrame(genreScores, columns=np.arange(1, numOfCluster + 1)), left_index=True, right_index=True)
 
-output.to_csv(r'..\data\output\genreScore_SVM_' + str(numOfCluster) + '.csv')
+#Acquire mean and median score for each coreId
+output_medianMean = pd.merge(output.groupby('coreId').median(), output.groupby('coreId').mean(), on=['genre_predicted', 'genre_real'], left_index=True, right_index=True)
+
+#Save
+output_medianMean.to_csv(r'..\data\output\genreScore_SVM_' + str(numOfCluster) + '.csv')
 
 
 #%%
@@ -133,8 +141,8 @@ seaborn.heatmap(mat.T, square=True, annot=True, fmt='d', cbar=False,
 plt.title('Confusion Matrix - SVM')
 plt.xlabel('true label')
 plt.ylabel('predicted label')
-plt.savefig(r'..\img\2-2_confusion_SVM_' + str(numOfCluster))
-plt.show()
+# plt.savefig(r'..\img\2-2_confusion_SVM_' + str(numOfCluster))
+# plt.show()
 plt.close()
 
 
@@ -179,17 +187,21 @@ for train, test in dfs:
     #Acquire score (probability) for each genre
     genreScore = clf.predict_proba(df_test.filter(regex='[0-9]+', axis=1))
     genreScores = np.append(genreScores, genreScore, axis=0)
-
 #%%
 #--Save genre prediction and scores
 dic = {
     'idTag': idTags,
+    'coreId': coreIds,
     'genre_real': groups,
     'genre_predicted': labels_predicted
 }
 output = pd.merge(pd.DataFrame(dic), pd.DataFrame(genreScores, columns=np.arange(1, numOfCluster + 1)), left_index=True, right_index=True)
 
-output.to_csv(r'..\data\output\genreScore_NN_' + str(numOfCluster) + '.csv')
+#Acquire mean and median score for each coreId
+output_medianMean = pd.merge(output.groupby('coreId').median(), output.groupby('coreId').mean(), on=['genre_predicted', 'genre_real'], left_index=True, right_index=True)
+
+#Save
+output_medianMean.to_csv(r'..\data\output\genreScore_NN_' + str(numOfCluster) + '.csv')
 
 
 #%%
@@ -208,8 +220,8 @@ seaborn.heatmap(mat.T, square=True, annot=True, fmt='d', cbar=False,
 plt.title('Confusion Matrix - Neural Nets (MLP)')
 plt.xlabel('true label')
 plt.ylabel('predicted label')
-plt.savefig(r'..\img\2-2_confusion_NN_' + str(numOfCluster))
-plt.show()
+# plt.savefig(r'..\img\2-2_confusion_NN_' + str(numOfCluster))
+# plt.show()
 plt.close()
 
 
@@ -265,12 +277,17 @@ for train, test in dfs:
 #--Save genre prediction and scores
 dic = {
     'idTag': idTags,
+    'coreId': coreIds,
     'genre_real': groups,
     'genre_predicted': labels_predicted
 }
 output = pd.merge(pd.DataFrame(dic), pd.DataFrame(genreScores, columns=np.arange(1, numOfCluster + 1)), left_index=True, right_index=True)
 
-output.to_csv(r'..\data\output\genreScore_RF_' + str(numOfCluster) + '.csv')
+#Acquire mean and median score for each coreId
+output_medianMean = pd.merge(output.groupby('coreId').median(), output.groupby('coreId').mean(), on=['genre_predicted', 'genre_real'], left_index=True, right_index=True)
+
+#Save
+output_medianMean.to_csv(r'..\data\output\genreScore_RF_' + str(numOfCluster) + '.csv')
 
 
 #%%
@@ -289,8 +306,8 @@ seaborn.heatmap(mat.T, square=True, annot=True, fmt='d', cbar=False,
 plt.title('Confusion Matrix - Random Forest')
 plt.xlabel('true label')
 plt.ylabel('predicted label')
-plt.savefig(r'..\img\2-2_confusion_RF_' + str(numOfCluster))
-plt.show()
+# plt.savefig(r'..\img\2-2_confusion_RF_' + str(numOfCluster))
+# plt.show()
 plt.close()
 
 
@@ -338,15 +355,21 @@ for train, test in dfs:
     genreScores = np.append(genreScores, genreScore, axis=0)
 
 
+#%%
 #--Save genre prediction and scores
 dic = {
     'idTag': idTags,
+    'coreId': coreIds,
     'genre_real': groups,
     'genre_predicted': labels_predicted
 }
 output = pd.merge(pd.DataFrame(dic), pd.DataFrame(genreScores, columns=np.arange(1, numOfCluster + 1)), left_index=True, right_index=True)
 
-output.to_csv(r'..\data\output\genreScore_NB_' + str(numOfCluster) + '.csv')
+#Acquire mean and median score for each coreId
+output_medianMean = pd.merge(output.groupby('coreId').median(), output.groupby('coreId').mean(), on=['genre_predicted', 'genre_real'], left_index=True, right_index=True)
+
+#Save
+output_medianMean.to_csv(r'..\data\output\genreScore_NB_' + str(numOfCluster) + '.csv')
 
 
 #%%
@@ -365,8 +388,8 @@ seaborn.heatmap(mat.T, square=True, annot=True, fmt='d', cbar=False,
 plt.title('Confusion Matrix - Multinomial Naive Bayes')
 plt.xlabel('true label')
 plt.ylabel('predicted label')
-plt.savefig(r'..\img\2-2_confusion_NB_' + str(numOfCluster))
-plt.show()
+# plt.savefig(r'..\img\2-2_confusion_NB_' + str(numOfCluster))
+# plt.show()
 plt.close()
 
 
@@ -414,15 +437,21 @@ for train, test in dfs:
     genreScores = np.append(genreScores, genreScore, axis=0)
 
 
+#%%
 #--Save genre prediction and scores
 dic = {
     'idTag': idTags,
+    'coreId': coreIds,
     'genre_real': groups,
     'genre_predicted': labels_predicted
 }
 output = pd.merge(pd.DataFrame(dic), pd.DataFrame(genreScores, columns=np.arange(1, numOfCluster + 1)), left_index=True, right_index=True)
 
-output.to_csv(r'..\data\output\genreScore_L_' + str(numOfCluster) + '.csv')
+#Acquire mean and median score for each coreId
+output_medianMean = pd.merge(output.groupby('coreId').median(), output.groupby('coreId').mean(), on=['genre_predicted', 'genre_real'], left_index=True, right_index=True)
+
+#Save
+output_medianMean.to_csv(r'..\data\output\genreScore_L_' + str(numOfCluster) + '.csv')
 
 
 #%%
@@ -441,8 +470,8 @@ seaborn.heatmap(mat.T, square=True, annot=True, fmt='d', cbar=False,
 plt.title('Confusion Matrix - Logistic Regression')
 plt.xlabel('true label')
 plt.ylabel('predicted label')
-plt.savefig(r'..\img\2-2_confusion_L_' + str(numOfCluster))
-plt.show()
+# plt.savefig(r'..\img\2-2_confusion_L_' + str(numOfCluster))
+# plt.show()
 plt.close()
 
 
@@ -490,15 +519,21 @@ for train, test in dfs:
     genreScores = np.append(genreScores, genreScore, axis=0)
 
 
+#%%
 #--Save genre prediction and scores
 dic = {
     'idTag': idTags,
+    'coreId': coreIds,
     'genre_real': groups,
     'genre_predicted': labels_predicted
 }
 output = pd.merge(pd.DataFrame(dic), pd.DataFrame(genreScores, columns=np.arange(1, numOfCluster + 1)), left_index=True, right_index=True)
 
-output.to_csv(r'..\data\output\genreScore_D_' + str(numOfCluster) + '.csv')
+#Acquire mean and median score for each coreId
+output_medianMean = pd.merge(output.groupby('coreId').median(), output.groupby('coreId').mean(), on=['genre_predicted', 'genre_real'], left_index=True, right_index=True)
+
+#Save
+output_medianMean.to_csv(r'..\data\output\genreScore_D_' + str(numOfCluster) + '.csv')
 
 
 #%%
@@ -517,6 +552,6 @@ seaborn.heatmap(mat.T, square=True, annot=True, fmt='d', cbar=False,
 plt.title('Confusion Matrix - Linear Discriminant')
 plt.xlabel('true label')
 plt.ylabel('predicted label')
-plt.savefig(r'..\img\2-2_confusion_D_' + str(numOfCluster))
-plt.show()
+# plt.savefig(r'..\img\2-2_confusion_D_' + str(numOfCluster))
+# plt.show()
 plt.close()

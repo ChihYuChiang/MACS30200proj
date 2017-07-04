@@ -165,23 +165,30 @@ Score to each cluster
 #Get required
 df_wk = pd.concat([coreCluster, df_scores], axis=1)
 
-#Create empty df
-df_cScore = pd.DataFrame(data=np.nan, index=CORE_ID, columns=np.arange(1, numClusters + 1))
+#Create empty dfs
+df_cScore_mean = pd.DataFrame(data=np.nan, index=CORE_ID, columns=np.arange(1, numClusters + 1))
+df_cScore_median = pd.DataFrame(data=np.nan, index=CORE_ID, columns=np.arange(1, numClusters + 1))
 
 #Acquire cluster means/medians
-method = 'mean'
-if method = 'mean':
-    clusterCores = df_wk.groupby('group_label', axis=0).mean().drop('core_id', axis=1)
-if method = 'median':
-    clusterCores = df_wk.groupby('group_label', axis=0).median().drop('core_id', axis=1)
+clusterCores_mean = df_wk.groupby('group_label', axis=0).mean().drop('core_id', axis=1)
+clusterCores_median = df_wk.groupby('group_label', axis=0).median().drop('core_id', axis=1)
 
 
 #--Acquire scores
 for clusterId in np.arange(1, numClusters + 1):
     for coreId in CORE_ID:
-        clusterCore = clusterCores.loc[clusterId]
+        clusterCore = clusterCores_mean.loc[clusterId]
         tsteScore = df_scores.loc[coreId - 1]
-        df_cScore.loc[coreId, clusterId] = spsd.cosine(clusterCore, tsteScore)
-df_cScore.columns = ['disTo' + str(i) for i in np.arange(1, numClusters + 1)]
+        df_cScore_mean.loc[coreId, clusterId] = spsd.cosine(clusterCore, tsteScore)
+df_cScore_mean.columns = ['disToMean' + str(i) for i in np.arange(1, numClusters + 1)]
+
+for clusterId in np.arange(1, numClusters + 1):
+    for coreId in CORE_ID:
+        clusterCore = clusterCores_median.loc[clusterId]
+        tsteScore = df_scores.loc[coreId - 1]
+        df_cScore_median.loc[coreId, clusterId] = spsd.cosine(clusterCore, tsteScore)
+df_cScore_median.columns = ['disToMedian' + str(i) for i in np.arange(1, numClusters + 1)]
+
+df_cScore = pd.merge(df_cScore_mean, df_cScore_median, left_index=True, right_index=True)
 
 df_cScore.to_csv(r'..\data\output\core_cluster_dist.csv',  encoding='utf-8')
