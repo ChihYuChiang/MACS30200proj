@@ -7,7 +7,7 @@ import pandas as pd
 df_scores = {}
 
 #The n decide which file to be read in
-for n in range(2, 11):
+for n in range(2, 21):
     df_scores[n] = pd.read_csv(r'..\data\process\tste\tste_embedding_' + str(n) + '.csv', encoding='utf-8', header=None)
 
 
