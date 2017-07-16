@@ -18,9 +18,9 @@ from sklearn.model_selection import KFold
 #%%
 #--Read in data
 #Remember to expand the review
-keyGNum = 1000
+keyGNum = 10
 df_core = pickle.load(open(r'..\data\process\core_cluster.p', 'rb'))
-df = pickle.load(open(r'..\data\process\score_' + str(keyGNum) + '_doc2vec.p', 'rb')) #df with distances from the last step
+df = pickle.load(open(r'..\data\process\score_' + str(keyGNum) + '_eu_doc2vec.p', 'rb')) #df with distances from the last step
 
 
 #%%
@@ -109,7 +109,7 @@ seaborn.heatmap(mat.T, square=True, annot=True, fmt='d', cbar=False,
 plt.title('Confusion Matrix - SVM')
 plt.xlabel('true label')
 plt.ylabel('predicted label')
-plt.savefig(r'..\img\2-2-1_confusion_SVM_' + str(numOfCluster) + '_k' + str(keyGNum))
+# plt.savefig(r'..\img\2-2-1_confusion_SVM_' + str(numOfCluster) + '_k' + str(keyGNum))
 plt.show()
 plt.close()
 
@@ -168,7 +168,7 @@ seaborn.heatmap(mat.T, square=True, annot=True, fmt='d', cbar=False,
 plt.title('Confusion Matrix - Neural Nets (MLP)')
 plt.xlabel('true label')
 plt.ylabel('predicted label')
-plt.savefig(r'..\img\2-2-1_confusion_NN_' + str(numOfCluster) + '_k' + str(keyGNum))
+# plt.savefig(r'..\img\2-2-1_confusion_NN_' + str(numOfCluster) + '_k' + str(keyGNum))
 plt.show()
 plt.close()
 
@@ -232,7 +232,7 @@ seaborn.heatmap(mat.T, square=True, annot=True, fmt='d', cbar=False,
 plt.title('Confusion Matrix - Random Forest')
 plt.xlabel('true label')
 plt.ylabel('predicted label')
-plt.savefig(r'..\img\2-2-1_confusion_RF_' + str(numOfCluster) + '_k' + str(keyGNum))
+# plt.savefig(r'..\img\2-2-1_confusion_RF_' + str(numOfCluster) + '_k' + str(keyGNum))
 plt.show()
 plt.close()
 
@@ -292,6 +292,120 @@ seaborn.heatmap(mat.T, square=True, annot=True, fmt='d', cbar=False,
 plt.title('Confusion Matrix - Multinomial Naive Bayes')
 plt.xlabel('true label')
 plt.ylabel('predicted label')
-plt.savefig(r'..\img\2-2-1_confusion_NB_' + str(numOfCluster) + '_k' + str(keyGNum))
+# plt.savefig(r'..\img\2-2-1_confusion_NB_' + str(numOfCluster) + '_k' + str(keyGNum))
+plt.show()
+plt.close()
+
+
+
+
+'''
+------------------------------------------------------------
+Logistics
+------------------------------------------------------------
+'''
+#%%
+#--Setting up
+#Data splitting and provide empty bottles
+dfs = kf.split(df_core_expand)
+precisions = []
+recalls    = []
+f1s        = []
+labels_real = np.empty(shape=(0,0))
+labels_predicted = np.empty(shape=(0,0))
+genreScores = np.empty(shape=(0,numOfCluster))
+
+
+#%%
+#--Train all models
+for train, test in dfs:
+    df_train = df_core_expand.loc[train]
+    df_test = df_core_expand.loc[test]
+
+    #Initialize and train the model
+    clf = LogisticRegression(multi_class='multinomial', solver='sag')
+    clf.fit(df_train.filter(regex='[0-9]+', axis=1), df_train['group'])
+    labels = clf.predict(df_test.filter(regex='[0-9]+', axis=1))
+
+    #Evaluation
+    precisions.append(sklearn.metrics.precision_score(df_test['group'], labels, average = 'weighted'))
+    recalls.append(sklearn.metrics.recall_score(df_test['group'], labels, average = 'weighted'))
+    f1s.append(sklearn.metrics.f1_score(df_test['group'], labels, average = 'weighted'))
+
+
+#%%
+#--Evaluate all models
+#Indicators
+print('precision: ' + str(np.mean(precisions)))
+print('recall: ' + str(np.mean(recalls)))
+print('f1 measure: ' + str(np.mean(f1s)))
+
+#%%
+#Confusion matrix
+mat = confusion_matrix(labels_real, labels_predicted)
+seaborn.heatmap(mat.T, square=True, annot=True, fmt='d', cbar=False,
+                xticklabels=np.arange(1, numOfCluster + 1),
+                yticklabels=np.arange(1, numOfCluster + 1))
+plt.title('Confusion Matrix - Logistic Regression')
+plt.xlabel('true label')
+plt.ylabel('predicted label')
+# plt.savefig(r'..\img\2-2-1_confusion_L_' + str(numOfCluster) + '_k' + str(keyGNum))
+plt.show()
+plt.close()
+
+
+
+
+'''
+------------------------------------------------------------
+Discriminant
+------------------------------------------------------------
+'''
+#%%
+#--Setting up
+#Data splitting and provide empty bottles
+dfs = kf.split(df_core_expand)
+precisions = []
+recalls    = []
+f1s        = []
+labels_real = np.empty(shape=(0,0))
+labels_predicted = np.empty(shape=(0,0))
+genreScores = np.empty(shape=(0,numOfCluster))
+
+
+#%%
+#--Train all models
+for train, test in dfs:
+    df_train = df_core_expand.loc[train]
+    df_test = df_core_expand.loc[test]
+
+    #Initialize and train the model
+    clf = LinearDiscriminantAnalysis()
+    clf.fit(df_train.filter(regex='[0-9]+', axis=1), df_train['group'])
+    labels = clf.predict(df_test.filter(regex='[0-9]+', axis=1))
+
+    #Evaluation
+    precisions.append(sklearn.metrics.precision_score(df_test['group'], labels, average = 'weighted'))
+    recalls.append(sklearn.metrics.recall_score(df_test['group'], labels, average = 'weighted'))
+    f1s.append(sklearn.metrics.f1_score(df_test['group'], labels, average = 'weighted'))
+
+
+#%%
+#--Evaluate all models
+#Indicators
+print('precision: ' + str(np.mean(precisions)))
+print('recall: ' + str(np.mean(recalls)))
+print('f1 measure: ' + str(np.mean(f1s)))
+
+#%%
+#Confusion matrix
+mat = confusion_matrix(labels_real, labels_predicted)
+seaborn.heatmap(mat.T, square=True, annot=True, fmt='d', cbar=False,
+                xticklabels=np.arange(1, numOfCluster + 1),
+                yticklabels=np.arange(1, numOfCluster + 1))
+plt.title('Confusion Matrix - Linear Discriminant')
+plt.xlabel('true label')
+plt.ylabel('predicted label')
+# plt.savefig(r'..\img\2-2-1_confusion_D_' + str(numOfCluster) + '_k' + str(keyGNum))
 plt.show()
 plt.close()
