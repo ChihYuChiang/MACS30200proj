@@ -2,6 +2,7 @@
 import pandas as pd
 import pickle
 import numpy as np
+import warnings
 import seaborn
 import matplotlib.pyplot as plt
 
@@ -14,11 +15,14 @@ from sklearn.ensemble import BaggingClassifier, RandomForestRegressor
 from sklearn.naive_bayes import MultinomialNB
 from sklearn.model_selection import KFold
 
+#Ignore all warnings
+warnings.simplefilter('ignore', category=Warning)
+
 
 #%%
 #--Read in data
 #Remember to expand the review
-keyGNum = 10
+keyGNum = 1000
 df_core = pickle.load(open(r'..\data\process\core_cluster.p', 'rb'))
 df = pickle.load(open(r'..\data\process\score_' + str(keyGNum) + '_eu_doc2vec.p', 'rb')) #df with distances from the last step
 
