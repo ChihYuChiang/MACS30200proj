@@ -1,4 +1,4 @@
-## Portray Product Experience by Expert Reviews—<br>Video Game Classification on In-gaming Experiences
+## Portray Product Experience by Expert Reviews—<br>Video Game Classification on In-game Experiences
 ### Course Project of MACS 30200
 #### Chih-Yu Chiang
 
