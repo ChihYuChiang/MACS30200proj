@@ -1,0 +1,16 @@
+---
+title: "About This Project"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+---
+### Origin
+This project and this website are built on a final project of University of Chicago's course, MACS 60000 - *Computational Content Analysis*, 2016, winter.
+
+### Regarding Intellectual Property
+The purpose of this project is exploring the underlining social sciences phenomena. It is conducted for academic investigation only. All data used in this project is acquired from and belongs to the original websites. If there's any concerns regarding data usage and other issues, please contact the author.
+
+### author
+Chih-Yu Chiang • University of Chicago  
+chihyuchiang@uchicago.edu

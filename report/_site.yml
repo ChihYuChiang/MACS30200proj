@@ -1,0 +1,26 @@
+name: "Portray Product Experience by Expert Reviews—
+Video Game Classification on In-game Experiences"
+output_dir: "../docs"
+output:
+  html_document:
+    theme: "yeti"
+    fig_caption: false
+navbar:
+  title: "Product Experience Research"
+  type: inverse
+  left:
+    - text: "Home"
+      href: index.html
+    - text: "Experience Variables"
+      href: index.html
+    - text: "Classification Models"
+      href: index.html
+    - text: "Portrait of the Experience"
+      href: index.html         
+      
+  right:
+    - text: "About"
+      href: index.html
+    - text: "Exploratory App"
+      icon: glyphicon-search
+      href: index.html
