@@ -8,21 +8,21 @@ output:
     fig_caption: false
     
 navbar:
-  title: "Product Experience Research"
-  type: inverse
+  title: "Research of Product Experiences"
+  type: default
   left:
     - text: "Home"
       href: index.html
     - text: "Experience Variables"
-      href: 
+      href: about.html
     - text: "Classification Models"
-      href: 
+      href: about.html
     - text: "Portrait of the Experience"
-      href:         
+      href: about.html        
       
   right:
     - text: "About"
       href: about.html
     - text: "Exploratory App"
       icon: glyphicon-search
-      href: 
+      href: about.html
