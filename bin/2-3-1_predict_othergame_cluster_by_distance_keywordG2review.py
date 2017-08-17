@@ -87,7 +87,7 @@ for game in TARGET:
 
 #%%
 #--Color map for predicted labels
-#Make color dictionery
+#Make color dictionary
 colordict = {
 0: '#d53e4f',
 1: '#f46d43',

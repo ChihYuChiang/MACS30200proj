@@ -13,7 +13,7 @@ print(len(df))
 
 
 #--Switch
-W2V = True
+W2V = False
 D2V = True
 
 
@@ -25,13 +25,13 @@ Perform W2V embeddings
 -----------------------------------------------------------
 '''
 if W2V:
-    #%%
+#%%
     #--Gensim implementation of Word2Vec -- with stopwords
     W2V_Wstop = gensim.models.word2vec.Word2Vec(df['Review_normalized_sent_Wstop'].sum(), workers=6)
     W2V_Wstop.save(r'..\data\process\W2V_Wstop')
 
 
-    #%%
+#%%
     #--Gensim implementation of Word2Vec -- without stopwords
     W2V_WOstop = gensim.models.word2vec.Word2Vec(df['Review_normalized_sent_WOstop'].sum(), workers=6)
     W2V_WOstop.save(r'..\data\process\W2V_WOstop')

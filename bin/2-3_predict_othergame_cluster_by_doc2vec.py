@@ -69,13 +69,23 @@ y_other_tsne = tsneGames[:, 1]
 #--Initialize and train the model
 clf = MLPClassifier()
 clf.fit(core_vec, core_groups)
+
+#Acquire predicted labels
 labels = clf.predict(other_vec)
 labels.shape
 
+#Acquire predicted probabilities
+probs = pd.DataFrame(clf.predict_proba(other_vec))
+probs.columns = np.arange(1, 8) #Rename column to conform to the predicted label
+probs.shape
+
+
 #%%
-#Save the predicted clusters
+#Save the predicted clusters and scores
 df_predicted = df.query('CoreID == 0').copy()
 df_predicted['Predicted'] = labels
+probs = probs.set_index(df_predicted.index)
+df_predicted = pd.concat([df_predicted, probs], axis=1)
 df_predicted.to_csv(r'..\data\output\df_predicted.csv', index=False, encoding='utf-8')
 
 #%%
@@ -91,7 +101,7 @@ for game in TARGET:
             
 #%%
 #--Color map for predicted labels
-#Make color dictionery
+#Make color dictionary
 colordict = {
 0: '#d53e4f',
 1: '#f46d43',
