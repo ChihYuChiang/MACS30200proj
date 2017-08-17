@@ -1,16 +1,43 @@
+"
+------------------------------------------------------------
+Initialization
+------------------------------------------------------------
+"
 library(shiny)
 library(DT)
-library(topicmodels)
 library(tidyverse)
-library(tidytext)
 library(feather)
 library(fmsb)
-library(stringdist)
 library(scales)
 library(RColorBrewer)
 
-#Preparation --------------------------------------------------------------
-#--Fuzzy match game title, a=target; b=searched list
+
+
+
+"
+Prepare raw data
+"
+#Read in main dataframe
+text_raw <- read_feather("text_raw.feather")
+
+#Games with topic scores
+games_lda <- model_lda %>%
+  tidytext:::tidy.LDA(matrix = "gamma") %>%
+  spread(topic, gamma) %>%
+  left_join(text_raw, by = c("document" = "GameTitle")) %>%
+  select(1:5, GSScore, ESRB, ReleaseDate)
+colnames(games_lda)=c("Game", "Social Score", "Achievemental Score", "Explorative Score", "Sensational Score", "GS Score", "ESRB", "Release Date")
+
+
+
+
+"
+Function for Fuzzy match game title
+
+- a = target
+- b = searched list
+- return = df(original searched list, distance; distance from low to high)
+"
 fuzzyMatch <- function(a, b) {
   #Load the stringdist package
   require(stringdist)
@@ -28,32 +55,31 @@ fuzzyMatch <- function(a, b) {
     arrange(distance) %>%
     slice(1:20)
   
-  #Return the df (original searched list, distance; distance from low to high)
+  #Return the df
   return(df)
 }
 
+#Function testing
 x <- fuzzyMatch("laysy", c("laysy", "1 lazy", "1", "1 LAZY", "laysy", "LAYSY"))
 
 
-# Read in main dataframe
-text_raw <- read_feather("text_raw.feather")
 
-# Load documentTermMatrix and LDA model object
-load("model_lda.RData")
 
-# Games with topic scores
-games_lda <- model_lda %>%
-  tidytext:::tidy.LDA(matrix = "gamma") %>%
-  spread(topic, gamma) %>%
-  left_join(text_raw, by = c("document" = "GameTitle")) %>%
-  select(1:5, GSScore, ESRB, ReleaseDate)
-colnames(games_lda)=c("Game", "Social Score", "Achievemental Score", "Explorative Score", "Sensational Score", "GS Score", "ESRB", "Release Date")
 
-# Back end section ---------------------------------------------------------
+
+
+
+"
+------------------------------------------------------------
+Back end
+------------------------------------------------------------
+"
 server <- function(input, output) {
-  # Filter data
+  "
+  Filter data table according to the input
+  "
   tbData <- reactive({
-    # Default select all
+    #Default select all
     if(input$ESRB == "---"){
       filter(games_lda,
              `GS Score` >= input$GSScore[1],
@@ -68,26 +94,36 @@ server <- function(input, output) {
     }
   })
   
-  # Clear selection 
+  
+  
+  
+  "
+  Clear data table selection 
+  "
   observeEvent(input$clearSelection, {
     dataTableProxy('queryResult') %>% selectRows(NULL)
   })
   
-  # Render output
-  # -- Output game topic spider plot
+  
+  
+  
+  "
+  Render output
+  "
+  #--Output game topic spider plot
   output$spiderPlot <- renderPlot({
     if(is.null(input$queryResult_rows_selected)){
       return()
     }
     
-    # Modify data to conform to radarchart's require form
+    #Modify data to conform to radarchart's require form
     pltData <- tbData()[input$queryResult_rows_selected,]
     pltData <- rbind(rep(1, 4), rep(0, 4), select(pltData, 1:5))
     
-    # Acquire color palette
+    #Acquire color palette
     shapeColor <- colorRampPalette(brewer.pal(12, "Accent"))(nrow(pltData) - 2)
     
-    # Plotting and plot setting
+    #Plotting and plot setting
     radarchart( pltData[2:5] , axistype = 1,
                 #custom polygon
                 pcol = shapeColor, pfcol = shapeColor, plwd = 1, plty = 1,
@@ -97,11 +133,12 @@ server <- function(input, output) {
                 vlcex = 1.2
     )
     
-    # Add legend
+    #Add legend
     legend(-2.5, 1.2, legend = levels(as.factor(pltData$Game[3:length(pltData$Game)])), title = "Game", col = shapeColor, seg.len = 2, border = "transparent", pch = 16, lty = 1)
   })
   
-  # -- Output data table based on filter criteria  
+  
+  #--Output data table
   output$queryResult <- DT::renderDataTable({
     DT::datatable(tbData() %>%
                     mutate(`Explorative Score` = percent(`Explorative Score`),
@@ -112,14 +149,4 @@ server <- function(input, output) {
                   options = list(pageLength = 25)
     )
   })
-  
-  # -- Output download current document
-  output$resultFile <- downloadHandler(
-    filename = function(){
-      paste("data-", Sys.Date(), ".csv", sep = "")
-    },
-    content = function(file){
-      write.csv(tbData(), file)
-    }
-  )
 }
