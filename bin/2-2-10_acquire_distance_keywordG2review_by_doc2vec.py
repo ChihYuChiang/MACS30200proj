@@ -82,7 +82,7 @@ for n in numOfGroups:
 
 
     #--Review and save
-    df.drop('Review', axis=1).to_csv(r'..\data\process\score_' + str(numOfGroup) + '_doc2vec.csv')
+    # df.drop('Review', axis=1).to_csv(r'..\data\process\score_' + str(numOfGroup) + '_doc2vec.csv')
     pickle.dump(df, open(r'..\data\process\score_' + str(numOfGroup) + '_doc2vec.p', 'wb'))
     df.query('CoreID > 0')
 
