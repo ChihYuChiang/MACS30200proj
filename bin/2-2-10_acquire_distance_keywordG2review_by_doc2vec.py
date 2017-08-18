@@ -17,6 +17,7 @@ D2VFeatures = D2V_WOstop.vocab.keys()
 
 #Setup target keyword group cluster
 numOfGroups = [10, 30, 100, 300, 1000]
+numOfGroups = [300]
 
 
 #%%
@@ -81,6 +82,7 @@ for n in numOfGroups:
 
 
     #--Review and save
+    df.drop('Review', axis=1).to_csv(r'..\data\process\score_' + str(numOfGroup) + '_doc2vec.csv')
     pickle.dump(df, open(r'..\data\process\score_' + str(numOfGroup) + '_doc2vec.p', 'wb'))
     df.query('CoreID > 0')
 
