@@ -3,10 +3,12 @@
 Initialization
 ------------------------------------------------------------
 "
+#Basics
 library(shiny)
 library(DT)
 library(tidyverse)
-library(feather)
+
+#Radar chart
 library(fmsb)
 library(scales)
 library(RColorBrewer)
@@ -17,16 +19,33 @@ library(RColorBrewer)
 "
 Prepare raw data
 "
-#Read in main dataframe
-text_raw <- read_feather("text_raw.feather")
+#Read in predicted scores (probability) of the 7 genres
+df_predicted <- read_csv("../data/output/df_predicted.csv") %>%
+  select(-Review) %>%
+  filter(Source == 1) #Preserve only from GameRadar
 
-#Games with topic scores
-games_lda <- model_lda %>%
-  tidytext:::tidy.LDA(matrix = "gamma") %>%
-  spread(topic, gamma) %>%
-  left_join(text_raw, by = c("document" = "GameTitle")) %>%
-  select(1:5, GSScore, ESRB, ReleaseDate)
-colnames(games_lda)=c("Game", "Social Score", "Achievemental Score", "Explorative Score", "Sensational Score", "GS Score", "ESRB", "Release Date")
+#Read in games' basic info; join with the score data
+df_main <- read_csv("../data/df_cb_main.csv") %>%
+  left_join(y=df_predicted, by=c("Author Name"="Author", "Game Title"="Game")) %>%
+  filter(CoreID == 0) %>% #Only non-core game
+  select(-`Short Description`, -Source, -CoreID, -Predicted, -`Author Name`, -`Review`) %>% #Remove uncessary columns
+  distinct(`Game Title`, .keep_all=TRUE) #Keep one game only one entry
+
+#Acquire distance matrix (based on the 7 genre scores)
+df_dist <- select(df_main, num_range("", c(1:7))) %>%
+  dist(method="euclidean", diag=FALSE, upper=FALSE) %>% #Euclidean is enough while the genre classification was based on Cosine between games
+  as.matrix()
+
+x <- df_dist[1,]
+sort(x)[4]
+ecdf(df_dist[1,])(0.46643647)
+
+#Read in scores of each keyword group
+df_keywordScore <- read_csv("../data/process/score_300_doc2vec.csv") %>%
+  mutate_at(vars(starts_with("group")), funs(st = scale(.)))
+
+#Read in keyword group representative terms
+df_keyword <- read_csv("../data/output/keywordGroup_hierarchy_300.csv")
 
 
 
