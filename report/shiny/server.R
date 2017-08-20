@@ -104,15 +104,23 @@ Back end
 server <- function(input, output) {
   "
   Search game title
-  tbData <- eventReactive(input$searchButton, {
   "
-  tbData <- eventReactive(input$searchButton, {
+  searchResultTb.out <- eventReactive(input$searchButton, {
+    #Acquire the result game titles
     searchResult <- fuzzyMatch(input$searchText, df_main["Game Title"])
-    mainTb <- filter(df_main, `Game Title` %in% searchResult[[1]])
-    mainTb[match(searchResult[[1]], mainTb[["Game Title"]]), ]
+    
+    #Filter df_main with the result game titles
+    searchResultTb <- filter(df_main, `Game Title` %in% searchResult[[1]])
+    
+    #Sort the df_main according to search result distance order
+    searchResultTb[match(searchResult[[1]], searchResultTb[["Game Title"]]), ] %>%
+      mutate_at(vars(matches("^[1-9]+$")), funs(percent)) #Change into percent format
   })
   
-
+  
+  targetTitleTb.out <- reactive({
+    searchResultTb.out()[input$searchResult_rows_selected, ] 
+  })
   
   
   "
@@ -130,9 +138,15 @@ server <- function(input, output) {
   "
   #--Output data table
   output$searchResult <- DT::renderDataTable({
-    DT::datatable(tbData() %>%
-                    mutate_at(vars(matches("^[1-9]+$")), funs(percent)),
-                  options = list(pageLength = 25)
-    )
+    DT::datatable(searchResultTb.out(), options=list(pageLength=10, dom="tip"), selection="single")
   })
+  
+  output$targetTitle <- DT::renderDataTable({
+    DT::datatable(targetTitleTb.out(), options=list(pageLength=1, dom="t"), selection="none")
+  })
+  
+  output$test <- renderUI({
+    HTML("test <hr>")
+  })
+  
 }

@@ -9,12 +9,14 @@ ui <- fluidPage(title = 'Game Experiential Topic',
                 sidebarLayout(
                   sidebarPanel(
                     textInput(inputId="searchText", label="", value=""),
-                    actionButton(inputId="searchButton", label="search")
+                    actionButton(inputId="searchButton", label="search"),
+                    DT::dataTableOutput(outputId="searchResult")
                   ),
                   
                   # Main panel
                   mainPanel(
-                    DT::dataTableOutput(outputId="searchResult")
+                    htmlOutput(outputId="test"),
+                    DT::dataTableOutput(outputId="targetTitle")
                   )
                 )
 )
