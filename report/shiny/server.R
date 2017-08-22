@@ -7,6 +7,8 @@ Initialization
 library(shiny)
 library(DT)
 library(tidyverse)
+library(scales)
+library(data.table)
 
 #Run app
 # runApp("../report/shiny")
@@ -19,18 +21,19 @@ Prepare raw data
 "
 #--Read in predicted scores (probability) of the 7 genres
 #../data/output/df_predicted.csv
-df_predicted <- read_csv("data/df_predicted.csv") %>%
+df_predicted <- fread("data/df_predicted.csv", header=TRUE) %>%
   select(-Review) %>%
   filter(Source == 1) #Preserve only from GameRadar
 
 
 #--Read in games' basic info; join with the score data
 #../data/df_cb_main.csv
-df_main <- read_csv("data/df_cb_main.csv") %>%
+df_main <- fread("data/df_cb_main.csv", header=TRUE) %>%
   left_join(y=df_predicted, by=c("Author Name"="Author", "Game Title"="Game")) %>%
   filter(CoreID == 0) %>% #Only non-core game
   select(-`Short Description`, -Source, -CoreID, -Predicted, -`Author Name`, -`Review`) %>% #Remove uncessary columns
-  distinct(`Game Title`, .keep_all=TRUE) #Keep one game only one entry
+  distinct(`Game Title`, .keep_all=TRUE) %>% #Keep one game only one entry
+  mutate_at(vars(matches("^[0-9]+$")), funs(round(., digits=4))) #Round score columns for later % display
 
 
 #--Acquire distance matrix (based on the 7 genre scores)
@@ -39,21 +42,16 @@ df_dist <- select(df_main, num_range("", c(1:7))) %>%
   as.matrix()
 
 
-x <- df_dist[1,]
-sort(x)[4]
-#Acquire percentile
-ecdf(df_dist[1,])(0.46643647)
-
-
 #--Read in scores of each keyword group; normalization (for identifying the differentiating features)
 #../data/process/score_300_doc2vec.csv
-df_keywordScore <- read_csv("data/score_300_doc2vec.csv") %>%
-  mutate_at(vars(starts_with("group")), funs(st = scale(.))) #New vars with a "st" suffix
+df_keywordScore <- fread("data/score_300_doc2vec.csv", header=TRUE) %>%
+  mutate_at(vars(starts_with("group")), funs(scale(.))) %>% #New vars with a "st" suffix
+  as.data.table() #Coerce back to dt to avoid error
 
 
 #--Read in keyword group terms
 #../data/output/keywordGroup_hierarchy_300.csv
-df_keyword <- read_csv("data/keywordGroup_hierarchy_300.csv")
+df_keyword <- fread("data/keywordGroup_hierarchy_300.csv", header=TRUE)
 
 
 
@@ -114,15 +112,50 @@ server <- function(input, output) {
     searchResultTb <- filter(df_main, `Game Title` %in% searchResult[[1]])
     
     #Sort the df_main according to search result distance order
-    searchResultTb[match(searchResult[[1]], searchResultTb[["Game Title"]]), ] %>%
-      mutate_at(vars(matches("^[1-9]+$")), funs(percent)) #Change into percent format
+    searchResultTb[match(searchResult[[1]], searchResultTb[["Game Title"]]), ] 
   })
   
   
   #--Acquire target title basic info
   targetTitleTb.out <- reactive({
     #Use selected row number to filter the resultTb
-    searchResultTb.out()[input$searchResult_rows_selected, ] 
+    searchResultTb.out()[input$searchResult_rows_selected, ]
+  })
+  
+  
+  #--Acquire similar games
+  similarTitleTb.out <- reactive({
+    if(is.null(input$searchResult_rows_selected)){
+      return(searchResultTb.out()[input$searchResult_rows_selected, ])
+    }
+    targetTitle <- searchResultTb.out()[[input$searchResult_rows_selected, "Game Title"]]
+    targetTitleIndex <- match(targetTitle, df_main[["Game Title"]])
+    similarTitleIndice <- sort(df_dist[targetTitleIndex, ])[2:6] %>%
+      names() %>%
+      as.numeric()
+    df_main[similarTitleIndice, ]
+  })
+  
+  
+  #--Acquire distinguishing attributes
+  distingushingKeyTb.out <- reactive({
+    if(is.null(input$searchResult_rows_selected)){
+      return(searchResultTb.out()[input$searchResult_rows_selected, ])
+    }
+    targetOldId <- searchResultTb.out()[[input$searchResult_rows_selected, V1]]
+    targetKeyScores <- filter(df_keywordScore, V1 == targetOldId)
+    
+    targetKeyScores <- filter(df_keywordScore, V1 == 1) %>%
+      select(matches("^group[1-9]+$")) %>%
+      t() %>%
+      as.data.table(keep.rownames="Keygroup") %>%
+      mutate(Abs = abs(V1)) %>%
+      top_n(5)
+    
+    x <- map(.x=targetKeyScores$keygroup, .f= ~ ecdf(df_keywordScore[[.x]]))
+    y <- map2(.x=x, .y=targetKeyScores$V1, .f= ~.x(.y))
+      
+    targetKeyScores$Percentage <- y
   })
   
   
@@ -135,19 +168,40 @@ server <- function(input, output) {
 
   
   "
-  Render output
+  Adjust format and render output
   "
-  #--Output data table
+  #Search result
   output$searchResult <- DT::renderDataTable({
-    DT::datatable(searchResultTb.out(), options=list(pageLength=10, dom="tip"), selection="single")
+    DT::datatable(searchResultTb.out() %>%
+                    select(`Game Title`, `Review Link` = `File Name`), #Display only title and review link,
+                  selection="single", options=list(pageLength=10, dom="tip"))
   })
   
+  #Target title 
   output$targetTitle <- DT::renderDataTable({
-    DT::datatable(targetTitleTb.out(), options=list(pageLength=1, dom="t"), selection="none")
+    DT::datatable(targetTitleTb.out() %>%
+                    select(-V1) %>%
+                    mutate_at(vars(matches("^[1-9]+$")), funs(percent)), #Change into percent format
+                  selection="none", options=list(pageLength=1, dom="t"))
   })
   
-  output$test <- renderUI({
-    HTML("test <hr>")
+  #Similar title 
+  output$similarTitle <- DT::renderDataTable({
+    DT::datatable(similarTitleTb.out() %>%
+                    select(-V1) %>%
+                    mutate_at(vars(matches("^[1-9]+$")), funs(percent)), #Change into percent format
+                  selection="none", options=list(pageLength=5, dom="t"))
+  })
+  
+  #Main panel headers
+  output$mainHeader_1 <- renderUI({
+    HTML("<h3>Target Game</h3>")
+  })
+  output$mainHeader_2 <- renderUI({
+    HTML("<hr> <h3>Top 5 Similar Games</h3>")
+  })
+  output$mainHeader_3 <- renderUI({
+    HTML("<hr> <h3>Distingusishing Features</h3>")
   })
   
 }

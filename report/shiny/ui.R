@@ -1,22 +1,51 @@
+"
+------------------------------------------------------------
+Initialization
+------------------------------------------------------------
+"
 library(shiny)
 
-# Front end section --------------------------------------------------------
-ui <- fluidPage(title = 'Game Experiential Topic',
-                # Title panel + some CSS
-                titlePanel(h1("Game Experiential Topic Comparison", style = "color:#888888")),   
+
+
+
+
+
+
+
+"
+------------------------------------------------------------
+Frond end
+------------------------------------------------------------
+"
+ui <- fluidPage(#--Header
+                #CSS
+                tags$head(tags$link(rel="stylesheet", type="text/css", href="main.css")),
+  
+  
+                #--Set up title
+                #Tab title
+                title='Game Experiential Topic',
                 
-                # Side bar
+                #Displayed title
+                titlePanel(h1("Game Experiential Topic Comparison")),   
+                
+                
+                #--Decide layout
                 sidebarLayout(
-                  sidebarPanel(
+                  #Side bar                
+                    sidebarPanel(
                     textInput(inputId="searchText", label="", value=""),
                     actionButton(inputId="searchButton", label="search"),
                     DT::dataTableOutput(outputId="searchResult")
                   ),
                   
-                  # Main panel
+                  #Main panel
                   mainPanel(
-                    htmlOutput(outputId="test"),
-                    DT::dataTableOutput(outputId="targetTitle")
+                    htmlOutput(outputId="mainHeader_1"),
+                    DT::dataTableOutput(outputId="targetTitle"),
+                    htmlOutput(outputId="mainHeader_2"),                    
+                    DT::dataTableOutput(outputId="similarTitle")
                   )
                 )
+
 )
