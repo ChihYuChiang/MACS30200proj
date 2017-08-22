@@ -103,8 +103,9 @@ Back end
 "
 server <- function(input, output) {
   "
-  Search game title
+  Process outputs
   "
+  #--Acquire search result titles
   searchResultTb.out <- eventReactive(input$searchButton, {
     #Acquire the result game titles
     searchResult <- fuzzyMatch(input$searchText, df_main["Game Title"])
@@ -118,14 +119,14 @@ server <- function(input, output) {
   })
   
   
+  #--Acquire target title basic info
   targetTitleTb.out <- reactive({
+    #Use selected row number to filter the resultTb
     searchResultTb.out()[input$searchResult_rows_selected, ] 
   })
   
   
-  "
-  Clear data table selection 
-  "
+  #--Clear data table selection 
   observeEvent(input$clearSelection, {
     dataTableProxy('queryResult') %>% selectRows(NULL)
   })
