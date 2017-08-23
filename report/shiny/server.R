@@ -31,7 +31,7 @@ df_predicted <- fread("data/df_predicted.csv", header=TRUE) %>%
 df_main <- fread("data/df_cb_main.csv", header=TRUE) %>%
   left_join(y=df_predicted, by=c("Author Name"="Author", "Game Title"="Game")) %>%
   filter(CoreID == 0) %>% #Only non-core game
-  select(-`Short Description`, -Source, -CoreID, -Predicted, -`Author Name`, -`Review`) %>% #Remove uncessary columns
+  select(-`Short Description`, -Source, -CoreID, -Predicted, -`Author Name`, -`Review`, -`File Name`) %>% #Remove uncessary columns
   distinct(`Game Title`, .keep_all=TRUE) %>% #Keep one game only one entry
   mutate_at(vars(matches("^[0-9]+$")), funs(round(., digits=4))) #Round score columns for later % display
 
@@ -57,7 +57,7 @@ df_keyword <- fread("data/keywordGroup_hierarchy_300.csv", header=TRUE)
 
 
 "
-Function for Fuzzy match game title
+Function for fuzzy match game title
 
 - a = target
 - b = searched list
@@ -143,8 +143,6 @@ server <- function(input, output) {
       return(searchResultTb.out()[input$searchResult_rows_selected, ])
     }
     targetOldId <- searchResultTb.out()[[input$searchResult_rows_selected, V1]]
-    targetKeyScores <- filter(df_keywordScore, V1 == targetOldId)
-    
     targetKeyScores <- filter(df_keywordScore, V1 == 1) %>%
       select(matches("^group[1-9]+$")) %>%
       t() %>%
@@ -153,7 +151,7 @@ server <- function(input, output) {
       top_n(5)
     
     x <- map(.x=targetKeyScores$keygroup, .f= ~ ecdf(df_keywordScore[[.x]]))
-    y <- map2(.x=x, .y=targetKeyScores$V1, .f= ~.x(.y))
+    y <- map2(.x=x, .y=targetKeyScores$V1, .f= ~ .x(.y))
       
     targetKeyScores$Percentage <- y
   })
@@ -168,13 +166,21 @@ server <- function(input, output) {
 
   
   "
-  Adjust format and render output
+  Render output
   "
   #Search result
   output$searchResult <- DT::renderDataTable({
     DT::datatable(searchResultTb.out() %>%
-                    select(`Game Title`, `Review Link` = `File Name`), #Display only title and review link,
-                  selection="single", options=list(pageLength=10, dom="tip"))
+                    mutate(` ` = `Game Title`) %>%
+                    select(`Game Title`, ` `), #Display only title and review link
+                  selection="single",
+                  options=list(pageLength=10, dom="tip", columnDefs=list(list(
+                    targets=2,
+                    render=JS(
+                      "function(data, type, row, meta) {",
+                      "return '<span title=\"' + data + '\"><a href=\"https://www.google.com/search?q=' + data + ' video game\">search for this game</a></span>';",
+                      "}")
+                  ))))
   })
   
   #Target title 
@@ -182,7 +188,8 @@ server <- function(input, output) {
     DT::datatable(targetTitleTb.out() %>%
                     select(-V1) %>%
                     mutate_at(vars(matches("^[1-9]+$")), funs(percent)), #Change into percent format
-                  selection="none", options=list(pageLength=1, dom="t"))
+                  selection="none",
+                  options=list(pageLength=1, dom="t"))
   })
   
   #Similar title 
@@ -190,9 +197,10 @@ server <- function(input, output) {
     DT::datatable(similarTitleTb.out() %>%
                     select(-V1) %>%
                     mutate_at(vars(matches("^[1-9]+$")), funs(percent)), #Change into percent format
-                  selection="none", options=list(pageLength=5, dom="t"))
+                  selection="none",
+                  options=list(pageLength=5, dom="t"))
   })
-  
+
   #Main panel headers
   output$mainHeader_1 <- renderUI({
     HTML("<h3>Target Game</h3>")
