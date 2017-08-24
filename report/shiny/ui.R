@@ -44,7 +44,13 @@ ui <- fluidPage(#--Header
                     htmlOutput(outputId="mainHeader_1"),
                     DT::dataTableOutput(outputId="targetTitle"),
                     htmlOutput(outputId="mainHeader_2"),                    
-                    DT::dataTableOutput(outputId="similarTitle")
+                    DT::dataTableOutput(outputId="similarTitle"),
+                    htmlOutput(outputId="mainHeader_3"), 
+                    htmlOutput(outputId="mainHeader_4"), 
+                    htmlOutput(outputId="mainHeader_4_1"),
+                    DT::dataTableOutput(outputId="dStrongFeature"),
+                    htmlOutput(outputId="mainHeader_4_2"),
+                    DT::dataTableOutput(outputId="dWeakFeature")
                   )
                 )
 

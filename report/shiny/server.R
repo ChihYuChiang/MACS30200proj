@@ -49,11 +49,13 @@ df_keywordScore <- fread("data/score_300_doc2vec.csv", header=TRUE) %>%
   as.data.table() #Coerce back to dt to avoid error
 
 
-#--Read in keyword group terms
+#--Read in keyword group terms and create a keyword dic
 #../data/output/keywordGroup_hierarchy_300.csv
 df_keyword <- fread("data/keywordGroup_hierarchy_300.csv", header=TRUE)
 
-
+#Get unique keyword group ID
+df_keywordDict <- distinct(df_keyword, cluster)
+df_keywordDict$keyword <- map(.x=df_keywordDict$cluster, .f= ~ filter(df_keyword, cluster == .x)$keyword)
 
 
 "
@@ -140,22 +142,27 @@ server <- function(input, output) {
   #--Acquire distinguishing attributes
   distingushingKeyTb.out <- reactive({
     if(is.null(input$searchResult_rows_selected)){
-      return(searchResultTb.out()[input$searchResult_rows_selected, ])
+      return(data.table(Abs = character(), V1 = character(), Percentage = character()))
     }
-    targetOldId <- searchResultTb.out()[[input$searchResult_rows_selected, V1]]
-    targetKeyScores <- filter(df_keywordScore, V1 == 1) %>%
-      select(matches("^group[1-9]+$")) %>%
+    targetTitle <- searchResultTb.out()[[input$searchResult_rows_selected, "Game Title"]]
+
+    targetKeyScores <- filter(df_keywordScore, Game == targetTitle) %>%
+      select(matches("^group[0-9]+$")) %>%
       t() %>%
-      as.data.table(keep.rownames="Keygroup") %>%
+      as.data.table(keep.rownames="keygroup") %>%
       mutate(Abs = abs(V1)) %>%
       top_n(5)
     
     x <- map(.x=targetKeyScores$keygroup, .f= ~ ecdf(df_keywordScore[[.x]]))
     y <- map2(.x=x, .y=targetKeyScores$V1, .f= ~ .x(.y))
       
-    targetKeyScores$Percentage <- y
+    targetKeyScores$Percentage <- unlist(y)
+    
+    targetKeyScores$keywords <- map(.x=targetKeyScores$keygroup,
+                                    .f= ~ filter(df_keywordDict, cluster == as.numeric(sub(pattern="group", replacement="", x=.x)))$keyword %>% unlist())
+    targetKeyScores
   })
-  
+
   
   #--Clear data table selection 
   observeEvent(input$clearSelection, {
@@ -168,6 +175,7 @@ server <- function(input, output) {
   "
   Render output
   "
+  #--Objects
   #Search result
   output$searchResult <- DT::renderDataTable({
     DT::datatable(searchResultTb.out() %>%
@@ -200,16 +208,47 @@ server <- function(input, output) {
                   selection="none",
                   options=list(pageLength=5, dom="t"))
   })
+  
+  #Distinguishing strong features
+  output$dStrongFeature <- DT::renderDataTable({
+    DT::datatable(distingushingKeyTb.out() %>%
+                    filter(V1 > 0) %>%
+                    select(-V1, -Abs) %>%
+                    mutate(Percentage = percent(Percentage)), #Change into percent format
+                  selection="none",
+                  options=list(pageLength=5, dom="t"))
+  })
+  
+  #Distinguishing strong features
+  output$dWeakFeature <- DT::renderDataTable({
+    DT::datatable(distingushingKeyTb.out() %>%
+                    filter(V1 < 0) %>%
+                    select(-V1, -Abs) %>%
+                    mutate(Percentage = percent(Percentage)), #Change into percent format
+                  selection="none",
+                  options=list(pageLength=5, dom="t"))
+  })
 
-  #Main panel headers
+  
+  #--Headers
+  #Main panel
   output$mainHeader_1 <- renderUI({
     HTML("<h3>Target Game</h3>")
   })
   output$mainHeader_2 <- renderUI({
-    HTML("<hr> <h3>Top 5 Similar Games</h3>")
+    HTML("<hr><br> <h3>Similar Games</h3>")
   })
   output$mainHeader_3 <- renderUI({
-    HTML("<hr> <h3>Distingusishing Features</h3>")
+    HTML("<hr><br> <h3>Dominant Features</h3>")
+  })
+  output$mainHeader_4 <- renderUI({
+    HTML("<hr><br> <h3>Distingusishing Features</h3>")
+  })
+  output$mainHeader_4_1 <- renderUI({
+    HTML("<h4>Strong</h4>")
+  })
+  output$mainHeader_4_2 <- renderUI({
+    HTML("<br> <h4>Weak</h4>")
   })
   
 }
