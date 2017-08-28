@@ -1,3 +1,13 @@
 h1, h2, h3, h4 {
 	color: #888888;
 }
+
+#authorship {
+  color: #707070;
+  font-size: 90%;
+  padding-left: 10px;
+}
+
+.s-text {
+  font-size: 85%;
+}
