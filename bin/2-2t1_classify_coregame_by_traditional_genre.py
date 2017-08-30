@@ -30,13 +30,16 @@ df = pickle.load(open(r'..\data\process\score_10_doc2vec.p', 'rb')) #The smalles
 #--Core game group label
 idTags = []
 groups = []
+game_titles = []
 for index, row in df.iterrows():
     if row['CoreID'] > 0:
         idTag = 'id_' + str(index)
         group = (df_core[df_core['core_id'] == row['CoreID']])['group_label'].values[0]
+        game_title = row['Game']
 
         idTags.append(idTag)
         groups.append(group)
+        game_titles.append(game_title)
 
 
 #%%
@@ -45,17 +48,33 @@ for index, row in df.iterrows():
 df_core_expand = pd.DataFrame({
     'idTag': idTags,
     'group': groups,
+    'game_title': game_titles
 })
 
-#Core game vecs
-keyGNum = 300
-np.random.seed(4)
-coreVecs = pd.DataFrame(np.random.rand(len(df_core_expand), keyGNum))
-pd.DataFrame(coreVecs)
+
+'''
+Turn genre info into dummy vars, as the predictors
+************************************************************
+************************************************************
+'''
+#Specify columns to be renamed (can also do index)
+df_tGenre = pd.read_csv('..\data\df_cb_genre.csv').rename(columns={'Unnamed: 0': 'Id'})
+
+df_tGenre = df_tGenre.groupby(by=['Game Title', 'Genre']).count().unstack(fill_value=0)
+df_tGenre.columns = df_tGenre.columns.droplevel(0)
+df_tGenre.where(cond=lambda x = df_tGenre: x == 0, other=1, inplace=True)
 
 #Make into a df
-df_core_expand = pd.merge(df_core_expand.reset_index(drop=True), coreVecs.reset_index(drop=True), left_index=True, right_index=True)
+df_core_expand = pd.merge(df_core_expand, df_tGenre,
+                          left_on='game_title', right_index=True)
+df_core_expand.iloc[:, 3:]
 numOfCluster = len(df_core_expand.group.unique())
+'''
+************************************************************
+************************************************************
+'''
+
+
 
 
 #%%
