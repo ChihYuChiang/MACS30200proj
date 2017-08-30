@@ -35,7 +35,7 @@ df_main <- fread("data/df_cb_main.csv", header=TRUE) %>%
   select(-`Short Description`, -Source, -CoreID, -Predicted, -`Author Name`, -`Review`, -`File Name`) %>% #Remove uncessary columns
   distinct(`Game Title`, .keep_all=TRUE) %>% #Keep one game only one entry
   mutate_at(vars(matches("^[0-9]+$")), funs(round(., digits=4))) %>% #Round score columns for later % display
-  select(`Game Title`, `Release Date`, `ESRB`, `GS Score`, `User Score`, everything()) #Reorder columns for later display
+  select(`Game Title`, `Release Date`, `ESRB Rating` = ESRB, `GS Score`, `User Score`, everything()) #Reorder columns for later display
 names(df_main) <- gsub("^([0-9]+)$", "Genre \\1", names(df_main)) #Rename genre scores
 
 #--Acquire distance matrix (based on the 7 genre scores)
@@ -118,6 +118,11 @@ server <- function(input, output) {
   "
   #--Acquire search result titles
   searchResultTb.out <- eventReactive(input$searchButton, {
+    #Validate the input text to not be empty
+    validate(
+      need(input$searchText != "", "Please enter valid text to search")
+    )
+    
     #Acquire the result game titles
     searchResult <- fuzzyMatch(input$searchText, df_main["Game Title"])
     
@@ -139,11 +144,6 @@ server <- function(input, output) {
   #--Acquire similar games
   #Based on 7 genre scores
   similarTitleTb.out <- reactive({
-    #A shell df for display when no target games selected
-    if(is.null(input$searchResult_rows_selected)){
-      return(searchResultTb.out()[input$searchResult_rows_selected, ])
-    }
-    
     #Acquire target title name from selection
     targetTitle <- searchResultTb.out()[[input$searchResult_rows_selected, "Game Title"]]
     
@@ -162,11 +162,6 @@ server <- function(input, output) {
 
   #--Acquire dominant attributes
   dominantKeyTb.out <- reactive({
-    #A shell df for display when no target games selected (the structure has to be compatible to the operations in rendering)
-    if(is.null(input$searchResult_rows_selected)){
-      return(data.table(Similarity.abs = character(), Similarity = character(), `Percent Rank` = character()))
-    }
-    
     #Acquire target title name from selection
     targetTitle <- searchResultTb.out()[[input$searchResult_rows_selected, "Game Title"]]
     
@@ -199,11 +194,6 @@ server <- function(input, output) {
 
   #--Acquire distinguishing attributes
   distingushingKeyTb.out <- reactive({
-    #A shell df for display when no target games selected (the structure has to be compatible to the operations in rendering)
-    if(is.null(input$searchResult_rows_selected)){
-      return(data.table(Similarity.abs = character(), Similarity = character(), `Percent Rank` = character()))
-    }
-    
     #Acquire target title name from selection
     targetTitle <- searchResultTb.out()[[input$searchResult_rows_selected, "Game Title"]]
 
@@ -264,74 +254,80 @@ server <- function(input, output) {
                          render=JS(
                            "function(data, type, row, meta) {",
                            "return '<span title=\"' + data + '\"><a href=\"https://www.google.com/search?q=' + data + ' video game\">search for this game</a></span>';",
-                           "}")
-                    )
+                           "}")),
+                    list(targets="_all", #Center text in all column
+                         className="dt-center")
                   )))
   })
 
   #Target title 
   output$targetTitle <- DT::renderDataTable({
-    DT::datatable(targetTitleTb.out() %>%
-                    select(-V1) %>%
-                    mutate_at(vars(matches("^.+[1-9]+$")), funs(percent)), #Change into percent format
-                  selection="none",
-                  options=list(pageLength=1, dom="t", columnDefs=list(
-                    list(targets="_all", #Center text in all column
-                         className="dt-center")
-                  )))
-  })
+    if(!is.null(input$searchResult_rows_selected)) { #Display table only when target game is selected
+      DT::datatable(targetTitleTb.out() %>%
+                      select(-V1) %>%
+                      mutate_at(vars(matches("^.+[1-9]+$")), funs(percent)), #Change into percent format
+                    selection="none",
+                    options=list(pageLength=1, dom="t", columnDefs=list(
+                      list(targets="_all", #Center text in all column
+                           className="dt-center")
+                    )))
+  }})
   
   #Similar title 
   output$similarTitle <- DT::renderDataTable({
-    DT::datatable(similarTitleTb.out() %>%
-                    select(-V1) %>%
-                    mutate_at(vars(matches("^.+[1-9]+$")), funs(percent)), #Change into percent format
-                  selection="none",
-                  options=list(pageLength=5, dom="t", columnDefs=list(
-                    list(targets="_all", #Center text in all column
-                         className="dt-center")
-                  )))
-  })
+    if(!is.null(input$searchResult_rows_selected)) { #Display table only when target game is selected
+      DT::datatable(similarTitleTb.out() %>%
+                      select(-V1) %>%
+                      mutate_at(vars(matches("^.+[1-9]+$")), funs(percent)), #Change into percent format
+                    selection="none",
+                    options=list(pageLength=5, dom="t", columnDefs=list(
+                      list(targets="_all", #Center text in all column
+                           className="dt-center")
+                    )))
+  }})
   
   #Dominant features
   output$dominantFeature <- DT::renderDataTable({
-    DT::datatable(dominantKeyTb.out(),
-                  selection="none",
-                  options=list(pageLength=5, dom="t", columnDefs=list(
-                    list(targets=c(1, 2), #Center text in column 1 and 2
-                         className="dt-center"),
-                    list(targets=3, #Make keyword text smaller
-                         className="s-text")
-                  )))
-  })
+    if(!is.null(input$searchResult_rows_selected)) { #Display table only when target game is selected
+      DT::datatable(dominantKeyTb.out(),
+                    selection="none",
+                    options=list(pageLength=5, dom="t", columnDefs=list(
+                      list(targets=c(1, 2), #Center text in column 1 and 2
+                           className="dt-center"),
+                      list(targets=3, #Make keyword text smaller
+                           className="s-text")
+                    )))
+  }})
   
   #Distinguishing strong features
   output$dStrongFeature <- DT::renderDataTable({
-    DT::datatable(distingushingKeyTb.out() %>%
-                    filter(Similarity > 0) %>%
-                    select(-Similarity, -Similarity.abs) %>%
-                    mutate(`Percent Rank` = percent(`Percent Rank`)), #Change into percent format
-                  selection="none",
-                  options=list(pageLength=5, dom="t", columnDefs=list(
-                    list(targets=c(1, 2), #Center text in column 1 and 2
-                         className="dt-center"),
-                    list(targets=3, #Make keyword text smaller
-                         className="s-text")
-                  )))
-  })
+    if(!is.null(input$searchResult_rows_selected)) { #Display table only when target game is selected
+      DT::datatable(distingushingKeyTb.out() %>%
+                      filter(Similarity > 0) %>%
+                      select(-Similarity, -Similarity.abs) %>%
+                      mutate(`Percent Rank` = percent(`Percent Rank`)), #Change into percent format
+                    selection="none",
+                    options=list(pageLength=5, dom="t", columnDefs=list(
+                      list(targets=c(1, 2), #Center text in column 1 and 2
+                           className="dt-center"),
+                      list(targets=3, #Make keyword text smaller
+                           className="s-text")
+                    )))
+  }})
   
   #Distinguishing weak features
   output$dWeakFeature <- DT::renderDataTable({
-    DT::datatable(distingushingKeyTb.out() %>%
-                    filter(Similarity < 0) %>%
-                    select(-Similarity, -Similarity.abs) %>%
-                    mutate(`Percent Rank` = percent(`Percent Rank`)), #Change into percent format
-                  selection="none",
-                  options=list(pageLength=5, dom="t", columnDefs=list(
-                    list(targets=c(1, 2), #Center text in column 1 and 2
-                         className="dt-center"),
-                    list(targets=3, #Make keyword text smaller
-                         className="s-text")
-                  )))
-  })
+    if(!is.null(input$searchResult_rows_selected)) { #Display table only when target game is selected
+      DT::datatable(distingushingKeyTb.out() %>%
+                      filter(Similarity < 0) %>%
+                      select(-Similarity, -Similarity.abs) %>%
+                      mutate(`Percent Rank` = percent(`Percent Rank`)), #Change into percent format
+                    selection="none",
+                    options=list(pageLength=5, dom="t", columnDefs=list(
+                      list(targets=c(1, 2), #Center text in column 1 and 2
+                           className="dt-center"),
+                      list(targets=3, #Make keyword text smaller
+                           className="s-text")
+                    )))
+  }})
 }
