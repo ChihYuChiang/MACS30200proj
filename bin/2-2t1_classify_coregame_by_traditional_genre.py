@@ -65,8 +65,7 @@ df_tGenre.columns = df_tGenre.columns.droplevel(0)
 df_tGenre.where(cond=lambda x = df_tGenre: x == 0, other=1, inplace=True)
 
 #Make into a df
-df_core_expand = pd.merge(df_core_expand, df_tGenre,
-                          left_on='game_title', right_index=True)
+df_core_expand = pd.merge(df_core_expand, df_tGenre,                          left_on='game_title', right_index=True).drop_duplicates(subset='game_title')
 df_core_expand.iloc[:, 3:]
 numOfCluster = len(df_core_expand.group.unique())
 '''
@@ -102,13 +101,13 @@ labels_predicted = np.empty(shape=(0,0))
 
 #--Train all models
 for train, test in dfs:
-    df_train = df_core_expand.loc[train]
-    df_test = df_core_expand.loc[test]
+    df_train = df_core_expand.iloc[train]
+    df_test = df_core_expand.iloc[test]
 
     #Initialize and train the model
     clf = sklearn.svm.SVC(kernel='linear', probability=False)
-    clf.fit(df_train.filter(regex='[0-9]+', axis=1), df_train['group'])
-    labels = clf.predict(df_test.filter(regex='[0-9]+', axis=1))
+    clf.fit(df_train.iloc[:, 3:], df_train['group'])
+    labels = clf.predict(df_test.iloc[:, 3:])
 
     #Evaluation
     precisions.append(sklearn.metrics.precision_score(df_test['group'], labels, average = 'weighted'))
@@ -161,13 +160,13 @@ labels_predicted = np.empty(shape=(0,0))
 
 #--Train all models
 for train, test in dfs:
-    df_train = df_core_expand.loc[train]
-    df_test = df_core_expand.loc[test]
+    df_train = df_core_expand.iloc[train]
+    df_test = df_core_expand.iloc[test]
 
     #Initialize and train the model
     clf = MLPClassifier()
-    clf.fit(df_train.filter(regex='[0-9]+', axis=1), df_train['group'])
-    labels = clf.predict(df_test.filter(regex='[0-9]+', axis=1))
+    clf.fit(df_train.iloc[:, 3:], df_train['group'])
+    labels = clf.predict(df_test.iloc[:, 3:])
 
     #Evaluation
     precisions.append(sklearn.metrics.precision_score(df_test['group'], labels, average = 'weighted'))
@@ -220,8 +219,8 @@ labels_predicted = np.empty(shape=(0,0))
 
 #--Train all models
 for train, test in dfs:
-    df_train = df_core_expand.loc[train]
-    df_test = df_core_expand.loc[test]
+    df_train = df_core_expand.iloc[train]
+    df_test = df_core_expand.iloc[test]
 
     #Create an instance of our decision tree classifier.
     tree = DecisionTreeClassifier(max_depth=10)
@@ -230,8 +229,8 @@ for train, test in dfs:
     clf = BaggingClassifier(tree, n_estimators=100, max_samples=0.8, random_state=1)
 
     #Fit the bagged classifier and visualize
-    clf.fit(df_train.filter(regex='[0-9]+', axis=1), df_train['group'])
-    labels = clf.predict(df_test.filter(regex='[0-9]+', axis=1))
+    clf.fit(df_train.iloc[:, 3:], df_train['group'])
+    labels = clf.predict(df_test.iloc[:, 3:])
 
     #Evaluation
     precisions.append(sklearn.metrics.precision_score(df_test['group'], labels, average = 'weighted'))
@@ -285,13 +284,13 @@ labels_predicted = np.empty(shape=(0,0))
 #%%
 #--Train all models
 for train, test in dfs:
-    df_train = df_core_expand.loc[train]
-    df_test = df_core_expand.loc[test]
+    df_train = df_core_expand.iloc[train]
+    df_test = df_core_expand.iloc[test]
 
     #Initialize and train the model
     clf = MultinomialNB()
-    clf.fit(df_train.filter(regex='[0-9]+', axis=1) - np.min(df_train.filter(regex='[0-9]+', axis=1)), df_train['group'])
-    labels = clf.predict(df_test.filter(regex='[0-9]+', axis=1))
+    clf.fit(df_train.iloc[:, 3:] - np.min(df_train.iloc[:, 3:]), df_train['group'])
+    labels = clf.predict(df_test.iloc[:, 3:])
 
     #Evaluation
     precisions.append(sklearn.metrics.precision_score(df_test['group'], labels, average = 'weighted'))
