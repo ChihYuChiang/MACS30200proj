@@ -68,6 +68,9 @@ df_tGenre.where(cond=lambda x = df_tGenre: x == 0, other=1, inplace=True)
 df_core_expand = pd.merge(df_core_expand, df_tGenre,                          left_on='game_title', right_index=True).drop_duplicates(subset='game_title')
 df_core_expand.iloc[:, 3:]
 numOfCluster = len(df_core_expand.group.unique())
+
+#Save for later
+df_core_expand.to_csv(r'..\data\process\traditional_genre.csv')
 '''
 ************************************************************
 ************************************************************
