@@ -9,10 +9,9 @@ library(DT)
 library(tidyverse)
 library(scales)
 library(data.table)
+library(Matrix)
+library(SparseM)
 library(feather)
-
-#Run app
-# runApp("../report/shiny")
 
 
 
@@ -38,12 +37,17 @@ df_main <- fread("data/df_cb_main.csv", header=TRUE) %>%
   select(`Game Title`, `Release Date`, `ESRB Rating` = ESRB, `GS Score`, `User Score`, everything()) #Reorder columns for later display
 names(df_main) <- gsub("^([0-9]+)$", "Genre \\1", names(df_main)) #Rename genre scores
 
+
 #--Acquire distance matrix (based on the 7 genre scores)
 RETRAIN <- FALSE
 if(RETRAIN) {
   df_dist <- select(df_main, starts_with("Genre")) %>%
     dist(method="euclidean", diag=FALSE, upper=FALSE) %>% #Euclidean is enough while the genre classification was based on Cosine between games
-    as.matrix() %>% #Convert a sparce matrix into dense
+    as.matrix() #As dense matrix
+  
+  df_dist[df_dist > 0.5] <- 0 #Convert unnecessary info (those distances too large to be considered in later sorting) to 0 for file size
+  
+  Matrix(df_dist, sparse=TRUE) %>% #Convert distance matrix into a sparse one (file is smaller but reading is slow)
     saveRDS("data/df_dist.rds")
 }
 df_dist <- readRDS("data/df_dist.rds")
@@ -151,14 +155,14 @@ server <- function(input, output) {
     targetTitleIndex <- match(targetTitle, df_main[["Game Title"]])
     
     #Use the target's index to find similar titles (with smallest dist) in df_dist
-    similarTitleIndice <- sort(df_dist[ ,1])[2:6] %>% #Index 1 will be the target game itself
+    similarTitleIndice <- sort(df_dist[ ,targetTitleIndex][df_dist[ ,targetTitleIndex] > 0])[1:5] %>% #Sort only those cells > 0 (filter out those transformed 0s, see dist computation)
       names() %>% #Acquire their indices
       as.numeric()
     
     #Use the similar titles' indices to find similar titles in main
     df_main[similarTitleIndice, ]
   })
-  
+ 
 
   #--Acquire dominant attributes
   dominantKeyTb.out <- reactive({

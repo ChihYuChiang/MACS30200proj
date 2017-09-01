@@ -48,7 +48,7 @@ ui <- fluidPage(#--Header
                     HTML("<p>
                            This app utilizes two constructs to measure the video game experiential features. One is a game's relationship to the Experiential Keyword Groups, English word sets that present corresponding human experiences. Another is a game's relationship to the Experiential Genres. They can be deemed as clusters of the Keyword Groups. For more information about these constructs, please refer to the <a href=\"https://github.com/ChihYuChiang/MAPSS-Thesis/blob/master/writing/Thesis%20-%20final%20draft.pdf\">original paper</a>.
                          </p>"),
-                    p(class="ss-text", "(Please allow 10 seconds for the app to initialize)"),
+                    p(class="ss-text", "(Please allow 10 seconds for initialization and each operation, the free shiny.io server is agonizingly slow)"),
                     textInput(inputId="searchText", label="", value=""),
                     actionButton(inputId="searchButton", label="search"),
                     p(""), #To make a space above. Somehow the `br()` doesn't work here.
