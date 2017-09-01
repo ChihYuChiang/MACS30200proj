@@ -97,6 +97,7 @@ reference/
 bin/tste/
 
 # temp files
+rsconnect/
 .vscode/
 kernel*
 test.py
