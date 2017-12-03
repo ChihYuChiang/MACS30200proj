@@ -41,7 +41,7 @@ ui <- fluidPage(#--Header
                            This app displays the <b>experiential features</b> of 11,724 video games of the last several decades. Based on these features, one can explore the experiences delivered by those video games. Regarding their in-game experiences, this app helps identify similar games and portrays the experiences by keywords that distinguishing a specific title from the other games.
                           </p>"),
                     tags$ol(tags$li("Please use video game names to search a game title you intend to explore."),
-                            tags$li("Select a target game title by clicking on the search result.")),
+                            tags$li("Select a target game title by clicking on the search result.", img(src="instruct_1.png", height="150"))),
                     HTML("<p>
                            The games' experiential features are identified through a predictive model developed in a research project of Chih-Yu Chiang, advised by James Evans and Oleg Urminsky of the University of Chicago. This model is based on multiple player surveys and expert game reviews of major video game information platforms, including GameSpot, GamesRadar, and Polygon, with a total of 15-million words of analysis. This model incorporates multiple machine learning techniques to extract experiential compositions of a video game from a video game specific Word2Vec embedding space.
                          </p>"),

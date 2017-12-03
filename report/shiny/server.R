@@ -257,7 +257,7 @@ server <- function(input, output) {
                     list(targets=3, #Transform the 3rd column into a link
                          render=JS(
                            "function(data, type, row, meta) {",
-                           "return '<span title=\"' + data + '\"><a href=\"https://www.google.com/search?q=' + data + ' video game\">search for this game</a></span>';",
+                           "return '<span title=\"' + data + '\"><a href=\"https://www.google.com/search?q=' + data + ' video game\">Click to google this game</a></span>';",
                            "}")),
                     list(targets="_all", #Center text in all column
                          className="dt-center")
