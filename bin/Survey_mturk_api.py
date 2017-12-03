@@ -1,4 +1,6 @@
 import time
+from datetime import datetime, timedelta
+import pytz
 import pandas as pd
 import boto3 #AWS mturk API access
 
@@ -19,12 +21,12 @@ Hit_prod = Hit(
 )
 TASK_TYPE = 0 #0:sand; 1:production
 BATCH = 5 #Number assignments in a batch (HIT)
-LIFE_TIME = int(2 * 60 * 60) #Life time of a HIT in sec (can be viewed on the MTurk worker board)
+LIFE_TIME = int(3 * 60 * 60) #Life time of a HIT in sec (can be viewed on the MTurk worker board)
 
 
 #--Standard response report
 def report(response):
-    print(response['ResponseMetadata']['date'])
+    print(response['ResponseMetadata']['HTTPHeaders']['date'])
     print(response['ResponseMetadata']['HTTPStatusCode'])
 
 
@@ -78,19 +80,18 @@ create()
 Create HITs every specified time gap
 ------------------------------------------------------------
 '''
-count = totalCount
-def ():
-    global count
+TARGET_ASSIGNMENT = 20
+currentAssignment = 0
 
-
-    count += 1
-    
-
-
-#--Recur the batch number of times
-while count < totalCount + batch:
+while currentAssignment < TARGET_ASSIGNMENT:
+    #Create a HIT (batch)
     create()
-    time.sleep(LIFE_TIME)
+
+    #Update current 
+    currentAssignment += BATCH
+
+    #Sleep between each HIT (batch) created
+    time.sleep(LIFE_TIME + 60 * 30)
 
 
 
@@ -115,9 +116,34 @@ while 'NextToken' in response:
     response = mturk.list_hits(MaxResults=100, NextToken=response['NextToken'])
     HITs = pd.concat([HITs, pd.DataFrame.from_dict(response['HITs'])])
 
+#All HITs
+HITs
+
 #Filter by HIT status
 #Assignable | Unassignable | Reviewable | Reviewing | Disposed
 HITs.query('HITStatus == "Reviewable"')
+
+
+
+
+
+
+
+
+'''
+------------------------------------------------------------
+Extend HIT lifetime
+- Using past time to immediately expire the HIT
+------------------------------------------------------------
+'''
+#Set timezone
+tz = pytz.timezone('EST')
+
+response = mturk.update_expiration_for_hit(
+    HITId='31S7M7DAGGC0LLEO9FX7T0ON86YTL4',
+    ExpireAt=datetime.now(tz=tz) + timedelta(minutes=180)
+)
+report(response)
 
 
 
@@ -132,7 +158,7 @@ Delete HIT
 ------------------------------------------------------------
 '''
 response = mturk.delete_hit(
-    HITId='31S7M7DAGGC0LLEO9FX7T0ON86YTL4'
+    HITId='3VMV5CHJZ81KZT0NYO0RG8JFCP8GTH'
 )
 report(response)
 
