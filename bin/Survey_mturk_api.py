@@ -22,6 +22,12 @@ BATCH = 5 #Number assignments in a batch (HIT)
 LIFE_TIME = int(2 * 60 * 60) #Life time of a HIT in sec (can be viewed on the MTurk worker board)
 
 
+#--Standard response report
+def report(response):
+    print(response['ResponseMetadata']['date'])
+    print(response['ResponseMetadata']['HTTPStatusCode'])
+
+
 #--Connect to mturk server
 #0:sand; 1:production
 def connect(taskType):
@@ -69,11 +75,42 @@ create()
 
 '''
 ------------------------------------------------------------
-Acquire HIT info
+Create HITs every specified time gap
 ------------------------------------------------------------
 '''
+count = totalCount
+def ():
+    global count
+
+
+    count += 1
+    
+
+
+#--Recur the batch number of times
+while count < totalCount + batch:
+    create()
+    time.sleep(LIFE_TIME)
+
+
+
+
+
+
+
+
+'''
+------------------------------------------------------------
+Acquire HIT info
+- http://boto3.readthedocs.io/en/latest/reference/services/mturk.html#MTurk.Client.list_hits
+- Max number of result=100
+------------------------------------------------------------
+'''
+#Initial request
 response = mturk.list_hits(MaxResults=100)
 HITs = pd.DataFrame.from_dict(response['HITs'])
+
+#Concat subsequent results of pagination
 while 'NextToken' in response:
     response = mturk.list_hits(MaxResults=100, NextToken=response['NextToken'])
     HITs = pd.concat([HITs, pd.DataFrame.from_dict(response['HITs'])])
@@ -89,20 +126,32 @@ HITs.query('HITStatus == "Reviewable"')
 
 
 
+'''
+------------------------------------------------------------
+Delete HIT
+------------------------------------------------------------
+'''
+response = mturk.delete_hit(
+    HITId='31S7M7DAGGC0LLEO9FX7T0ON86YTL4'
+)
+report(response)
+
+
+
+
+
+
+
 
 '''
 ------------------------------------------------------------
-Acquire assignment info
+Acquire completed assignment info
 ------------------------------------------------------------
 '''
-#--Acquire assignment info
-#AssignmentStatuses=['Submitted'|'Approved'|'Rejected']
 response = mturk.list_assignments_for_hit(
-    HITId='3QOPOPHLGN60QK5O6ZJ5NWR8WSEWBU',
+    HITId='31S7M7DAGGC0LLEO9FX7T0ON86YTL4',
     MaxResults=100,
-    AssignmentStatuses=[
-        'Submitted', 'Approved','Rejected',
-    ]
+    AssignmentStatuses=['Submitted', 'Approved', 'Rejected']
 )
 response['Assignments']
 
@@ -115,28 +164,48 @@ response['Assignments']
 
 '''
 ------------------------------------------------------------
-Create new HIT by specified time gap
+Review assignments
 ------------------------------------------------------------
 '''
-#--Configure
-totalCount = 5 #Total HITs completed (for request token)
-batch = 5 #Number of HITs to be automated in a batch
-gap = int(2 * 60 * 60) #Gap hours between each HIT
+def review(assignmentId, verdict, feedback):
+    #Decide function to use
+    reviewFunction = {
+        0: mturk.approve_assignment,
+        1: mturk.reject_assignment
+    }
+
+    #Review
+    response = reviewFunction(AssignmentId=assignmentId, RequesterFeedback=feedback, OverrideRejection=True)
+    
+    report(response)
 
 
-#--Define function for recursion
-count = totalCount
-def callAPI():
-    global count
+#0:approve; 1:reject
+review('id', 0, 'feedback')
 
 
-    count += 1
-    time.sleep(gap)
 
 
-#--Recur the batch number of times
-while count < totalCount + batch:
-    callAPI()
+
+
+
+
+'''
+------------------------------------------------------------
+Notify worker
+- Send email to worker
+- Can notify a batch of worker; max=100
+- Only those have previously approved or rejected work
+------------------------------------------------------------
+'''
+response = mturk.notify_workers(
+    Subject='string',
+    MessageText='string',
+    WorkerIds=[
+        'A3DS068PGQ5RBN'
+    ]
+)
+report(response)
 
 
 
@@ -154,4 +223,4 @@ response = mturk.create_worker_block(
     WorkerId='A3DS068PGQ5RBN',
     Reason='As stated in the previous email.'
 )
-print(response)
+report(response)
