@@ -115,7 +115,7 @@ HITs = pd.DataFrame.from_dict(response['HITs'])
 #Concat subsequent results of pagination
 while 'NextToken' in response:
     response = mturk.list_hits(MaxResults=100, NextToken=response['NextToken'])
-    HITs = pd.concat([HITs, pd.DataFrame.from_dict(response['HITs'])])
+    HITs = pd.concat([HITs, pd.DataFrame.from_dict(response['HITs'])],  ignore_index=True)
 
 #All HITs
 HITs
@@ -176,18 +176,30 @@ report(response)
 Acquire completed assignment info
 ------------------------------------------------------------
 '''
-def getAssignments():
-    
-response = mturk.list_assignments_for_hit(
-    HITId='301KG0KX9C74FQ1LZFYCMPOSGD52HW',
-    MaxResults=100,
-    AssignmentStatuses=['Submitted', 'Approved', 'Rejected']
-)
-assignments = pd.DataFrame.from_dict(response['Assignments'])
+#Acquire all completed assignments in the HITs
+#The assignment status can be specified
+def getAssignments(HITs, assignmentStatus=['Submitted', 'Approved', 'Rejected']):
+    assignments = pd.DataFrame()
 
-assignments['Answer'].apply(lambda x: BeautifulSoup(x, 'html5lib').get_text().strip('\nsurveycode'))
+    #Process each HIT in the HITs
+    for index, HIT in HITs.iterrows():
+        response = mturk.list_assignments_for_hit(
+            HITId=HIT['HITId'],
+            MaxResults=100,
+            AssignmentStatuses=assignmentStatus
+        )
 
-BeautifulSoup(assignments['Answer'][0], 'html5lib').get_text().strip('surveycode')
+        #Make target info a df and concat
+        assignments = pd.concat([assignments, pd.DataFrame.from_dict(response['Assignments'])],  ignore_index=True)
+
+    return assignments
+assignments = getAssignments(HITs)
+
+#Some processing to get the survey code
+assignments['surveyCodes'] = assignments['Answer'].apply(lambda x: BeautifulSoup(x, 'html5lib').get_text().strip('\nsurveycode'))
+
+#Print the result
+assignments
 
 
 
