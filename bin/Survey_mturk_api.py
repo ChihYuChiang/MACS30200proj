@@ -1,6 +1,7 @@
 import time
 from datetime import datetime, timedelta
 import pytz
+from bs4 import BeautifulSoup
 import pandas as pd
 import boto3 #AWS mturk API access
 
@@ -19,7 +20,7 @@ Hit_prod = Hit(
     hitType='31SXY3N7KEJ7IU43DSQI25K85QRB0F',
     hitLayout='36O2T6W7PUKYFKK4BXVRGTGJTWEDES'
 )
-TASK_TYPE = 0 #0:sand; 1:production
+TASK_TYPE = 1 #0:sand; 1:production
 BATCH = 5 #Number assignments in a batch (HIT)
 LIFE_TIME = int(3 * 60 * 60) #Life time of a HIT in sec (can be viewed on the MTurk worker board)
 
@@ -80,7 +81,7 @@ create()
 Create HITs every specified time gap
 ------------------------------------------------------------
 '''
-TARGET_ASSIGNMENT = 20
+TARGET_ASSIGNMENT = 10
 currentAssignment = 0
 
 while currentAssignment < TARGET_ASSIGNMENT:
@@ -121,7 +122,8 @@ HITs
 
 #Filter by HIT status
 #Assignable | Unassignable | Reviewable | Reviewing | Disposed
-HITs.query('HITStatus == "Reviewable"')
+HITs_reviewable = HITs.query('HITStatus == "Reviewable"')
+HITs_reviewable
 
 
 
@@ -137,11 +139,11 @@ Extend HIT lifetime
 ------------------------------------------------------------
 '''
 #Set timezone
-tz = pytz.timezone('EST')
+tz = pytz.timezone('PST')
 
 response = mturk.update_expiration_for_hit(
-    HITId='31S7M7DAGGC0LLEO9FX7T0ON86YTL4',
-    ExpireAt=datetime.now(tz=tz) + timedelta(minutes=180)
+    HITId='301KG0KX9C74FQ1LZFYCMPOSGD52HW',
+    ExpireAt=datetime.now(tz=tz) + timedelta(minutes=120)
 )
 report(response)
 
@@ -174,12 +176,18 @@ report(response)
 Acquire completed assignment info
 ------------------------------------------------------------
 '''
+def getAssignments():
+    
 response = mturk.list_assignments_for_hit(
-    HITId='31S7M7DAGGC0LLEO9FX7T0ON86YTL4',
+    HITId='301KG0KX9C74FQ1LZFYCMPOSGD52HW',
     MaxResults=100,
     AssignmentStatuses=['Submitted', 'Approved', 'Rejected']
 )
-response['Assignments']
+assignments = pd.DataFrame.from_dict(response['Assignments'])
+
+assignments['Answer'].apply(lambda x: BeautifulSoup(x, 'html5lib').get_text().strip('\nsurveycode'))
+
+BeautifulSoup(assignments['Answer'][0], 'html5lib').get_text().strip('surveycode')
 
 
 
