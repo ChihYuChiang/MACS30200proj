@@ -5,6 +5,7 @@ Initialization
 "
 #Basics
 library(shiny)
+library(shinyjs)
 library(DT)
 library(tidyverse)
 library(scales)
@@ -117,6 +118,8 @@ Back end
 ------------------------------------------------------------
 "
 server <- function(input, output) {
+  shinyjs::hide("main")
+  
   "
   Process outputs
   "
