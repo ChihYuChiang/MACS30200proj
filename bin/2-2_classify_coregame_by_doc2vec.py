@@ -25,7 +25,7 @@ warnings.simplefilter('ignore', category=Warning)
 #--Read in data
 D2V_WOstop = gensim.models.Doc2Vec.load(r'..\data\process\D2V_WOstop')
 df = pd.read_csv(r'..\data\df_cb_main_combined.csv', index_col=0, encoding='utf-8', error_bad_lines=False).dropna(subset=['Review']).drop_duplicates(['Author', 'Game'])
-df_core = pickle.load(open(r'..\data\process\core_cluster.p', 'rb'))
+df_core = pd.read_pickle(r'..\data\process\core_cluster.p')
 
 
 #%%
@@ -57,6 +57,9 @@ df_core_expand = pd.DataFrame({
 })
 df_core_expand = pd.merge(df_core_expand, coreVecs, left_index=True, right_index=True)
 numOfCluster = len(df_core_expand.group.unique())
+
+#Save a core vec copy
+df_core_expand.to_csv(r'..\data\output\core_vec.csv')
 
 #How many review in each cluster
 df_core_expand.groupby(['group']).count()
